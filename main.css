@@ -1,15 +1,15 @@
 .glow {
     font-size: 80px;
-    color: #000000;
+    color: #070707;
     text-align: center;
-    -webkit-animation: glow 2s ease-in-out infinite alternate;
+    -webkit-animation: glow 1s ease-in-out infinite alternate;
     -moz-animation: glow 2s ease-in-out infinite alternate;
-    animation: glow 2s ease-in-out infinite alternate;
+    animation: glow 3s ease-in-out infinite alternate;
 }
 
 @-webkit-keyframes glow {
     from {
-        text-shadow: 0 0 10px #385cd3, 0 0 20px #00ffd5, 0 0 30px #523ccc, 0 0 40px #4a2bbd, 0 0 50px #219a9e, 0 0 60px #2f19af, 0 0 70px #32f1ff;
+        text-shadow: 0 0 10px #29b463, 0 0 20px #4d8bdb, 0 0 30px #523ccc, 0 0 40px #4a2bbd, 0 0 50px #219a9e, 0 0 60px #2f19af, 0 0 70px #32f1ff;
     }
 
     to {
