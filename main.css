@@ -20,11 +20,11 @@ body {
 
 @-webkit-keyframes glow {
     from {
-        text-shadow: 0 0 10px #e5ff00, 0 0 20px #faf601, 0 0 30px #ffffff, 0 0 40px #e6ff05, 0 0 50px #ffffff, 0 0 60px #ffee00, 0 0 70px #ffffff;
+        text-shadow: 0 0 10px #e5ff00, 0 0 20px #fa0101, 0 0 30px #ffffff, 0 0 40px #0dff05, 0 0 50px #03eeff, 0 0 60px #84a7f1, 0 0 70px #0400ff;
     }
 
     to {
-        text-shadow: 0 0 20px #fefdff, 0 0 30px #ffffff, 0 0 40px #f5f107, 0 0 50px #ffffff, 0 0 60px #eeff02, 0 0 70px #ffffff, 0 0 80px #fceb05;
+        text-shadow: 0 0 20px #de37ff, 0 0 30px #ff39ee, 0 0 40px #f5679d, 0 0 50px #ff1327, 0 0 60px #e3f307, 0 0 70px #32ff20, 0 0 80px #c0bff7;
     }
 }
 
