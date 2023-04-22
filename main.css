@@ -7,9 +7,15 @@
     animation: glow 3s ease-in-out infinite alternate;
 }
 
+html,
+body {
+    height: 100%;
+}
+
 body {
     background-color: rgb(3, 3, 3);
     color: silver;
+    height: 100%;
 }
 
 @-webkit-keyframes glow {
@@ -32,4 +38,35 @@ body {
     float: right;
     border: 1px solid #ffffff;
     color: red;
+}
+
+.my-title {
+    height: 75px;
+    overflow: hidden;
+    font-size: 70px;
+}
+
+.log {
+    border: 1px solid red;
+    height: 400px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+.magic_button {
+    width: 40px;
+}
+
+.some_input {
+    width: calc(100% - 60px);
+}
+
+.input-container {
+    /* border: 1px solid red; */
+    height: 30px;
+}
+
+.chat-container {
+    /* border: 1px solid red; */
+    height: calc(100% - 30px)
 }
