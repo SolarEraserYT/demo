@@ -13,18 +13,18 @@ body {
 }
 
 body {
-    background-color: rgb(3, 3, 3);
+    background-color: rgb(196, 236, 241);
     color: silver;
     height: 100%;
 }
 
 @-webkit-keyframes glow {
     from {
-        text-shadow: 0 0 10px #ffd901, 0 0 20px #c8ff00, 0 0 30px #c8ff00, 0 0 40px #fffb00, 0 0 50px #fffb00, 0 0 60px #eeff00, 0 0 70px #e5ff00;
+        text-shadow: 0 0 10px #7207ff, 0 0 20px #6544db, 0 0 30px #b700ff, 0 0 40px #4b94f3, 0 0 50px #4729f3, 0 0 60px #dc68ff, 0 0 70px #90dcff;
     }
 
     to {
-        text-shadow: 0 0 20px #e5ff00, 0 0 30px #e5ff00, 0 0 40px #e5ff00, 0 0 50px #d9ff00, 0 0 60px #eeff00, 0 0 70px #e5ff00, 0 0 80px #eeff00;
+        text-shadow: 0 0 20px #ba89f1, 0 0 30px #8ab3e9, 0 0 40px #616bf0, 0 0 50px #822fc7, 0 0 60px #59a4eb, 0 0 70px #ffffff, 0 0 80px #2c3afc;
     }
 }
 
