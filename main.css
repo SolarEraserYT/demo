@@ -47,7 +47,7 @@ body {
 }
 
 .log {
-    border: 1px solid rgb(0, 255, 0);
+    border: 1px solid rgb(255, 0, 0);
     height: 400px;
     overflow-y: auto;
     padding: 5px;
