@@ -1,10 +1,15 @@
 .glow {
     font-size: 80px;
-    color: #070707;
+    color: #cac5c5;
     text-align: center;
     -webkit-animation: glow 1s ease-in-out infinite alternate;
     -moz-animation: glow 2s ease-in-out infinite alternate;
     animation: glow 3s ease-in-out infinite alternate;
+}
+
+body {
+    background-color: rgb(3, 3, 3);
+    color: silver;
 }
 
 @-webkit-keyframes glow {
@@ -15,4 +20,16 @@
     to {
         text-shadow: 0 0 20px #1c0c3a, 0 0 30px #0e0f4d, 0 0 40px #1f1257, 0 0 50px #8453d3, 0 0 60px #ece6e6, 0 0 70px #ff3aff, 0 0 80px #ae00ff;
     }
+}
+
+.my_left_panel {
+    float: left;
+    border: 1px solid #ffffff;
+    color: #02f553;
+}
+
+.my_right_panel {
+    float: right;
+    border: 1px solid #ffffff;
+    color: red;
 }
