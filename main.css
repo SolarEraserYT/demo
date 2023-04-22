@@ -3,8 +3,8 @@
     color: #cac5c5;
     text-align: center;
     -webkit-animation: glow 1s ease-in-out infinite alternate;
-    -moz-animation: glow 10s ease-in-out infinite alternate;
-    animation: glow 10s ease-in-out infinite alternate;
+    -moz-animation: glow 1s ease-in-out infinite alternate;
+    animation: glow 1s ease-in-out infinite alternate;
 }
 
 html,
@@ -13,18 +13,18 @@ body {
 }
 
 body {
-    background-color: rgb(196, 236, 241);
+    background-color: rgb(0, 0, 0);
     color: silver;
     height: 100%;
 }
 
 @-webkit-keyframes glow {
     from {
-        text-shadow: 0 0 10px #7207ff, 0 0 20px #6544db, 0 0 30px #b700ff, 0 0 40px #4b94f3, 0 0 50px #4729f3, 0 0 60px #dc68ff, 0 0 70px #90dcff;
+        text-shadow: 0 0 10px #e5ff00, 0 0 20px #faf601, 0 0 30px #ffffff, 0 0 40px #e6ff05, 0 0 50px #ffffff, 0 0 60px #ffee00, 0 0 70px #ffffff;
     }
 
     to {
-        text-shadow: 0 0 20px #ba89f1, 0 0 30px #8ab3e9, 0 0 40px #616bf0, 0 0 50px #822fc7, 0 0 60px #59a4eb, 0 0 70px #ffffff, 0 0 80px #2c3afc;
+        text-shadow: 0 0 20px #fefdff, 0 0 30px #ffffff, 0 0 40px #f5f107, 0 0 50px #ffffff, 0 0 60px #eeff02, 0 0 70px #ffffff, 0 0 80px #fceb05;
     }
 }
 
