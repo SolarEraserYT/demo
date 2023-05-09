@@ -1,22 +1,24 @@
-// send data function
-function send_data() {
-    //get input value
-    let my_val = document.querySelector('.some_input').value
-    let my_log_box = document.querySelector('.log')
-    //add input value to log and a <br>
-    my_log_box.innerHTML += my_val + '<br>'
-    // scroll the log div to end
-    my_log_box.scrollTop = my_log_box.scrollHeight
-    //clear the input 
-    document.querySelector('.some_input').value = ''
-}
+JavaScript (chat.js):
 
-//button click event - on click send_data
-document.querySelector(".magic_button").onclick = () => send_data()
+const socket = io();
 
-//input on key press event - if key is Enter send_data
-document.querySelector('.some_input')?.addEventListener('keypress', e => {
-    if (e.key === 'Enter') send_data()
-})
+const messageForm = document.getElementById("message-form");
+const messageInput = document.getElementById("message-input");
+const messages = document.getElementById("messages");
+
+messageForm.addEventListener("submit", e => {
+  e.preventDefault();
+  const message = messageInput.value;
+  if (message) {
+    socket.emit("chatMessage", message);
+    messageInput.value = "";
+  }
+});
+
+socket.on("chatMessage", message => {
+  const messageElement = document.createElement("div");
+  messageElement.innerText = message;
+  messages.appendChild(messageElement);
+});
 
 
