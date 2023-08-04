@@ -1,11 +1,11 @@
 :root {
     color-scheme: dark;
     --border-color: #ccc;
-    --active-color: rgb(250, 12, 4);
+    --active-color: rgb(4, 221, 250);
     --unread-color: rgb(252, 208, 128);
-    --modal-backgound: rgba(233, 139, 139, 0.664);
-    --button-background: #c3c6c9;
-    --input-background: #745a5a;
+    --modal-backgound: rgba(252, 241, 89, 0.664);
+    --button-background: #f8fcff;
+    --input-background: #a5a5a5;
     --font-familiy: monospace, monospace
 }
 
