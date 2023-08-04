@@ -3,9 +3,9 @@
     --border-color: #ccc;
     --active-color: rgb(250, 12, 4);
     --unread-color: rgb(252, 208, 128);
-    --modal-backgound: rgba(26, 26, 26, 0.664);
-    --button-background: #555657;
-    --input-background: #242424;
+    --modal-backgound: rgba(233, 139, 139, 0.664);
+    --button-background: #c3c6c9;
+    --input-background: #745a5a;
     --font-familiy: monospace, monospace
 }
 
