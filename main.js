@@ -145,7 +145,7 @@ new class {
     }
     render_room(room) {
         let item = this.template_item('#room_item', '.left')
-        item.querySelector('.name').innerHTML = room.name
+        item.querySelector('.name').textContent = room.name ?? '';
         item.id = `room-${this.format_id(room.name)}`
         item.onclick = () => {
             room.unread = false
@@ -168,10 +168,14 @@ new class {
     }
     render_message(msg) {
         let item = this.template_item('#message_item', '.messages')
-        Object.keys(msg).map(k => {
-            let el = item.querySelector(`.${k}`)
-            if (el) el.innerHTML = msg[k]
-        })
+
+Object.keys(msg).forEach(k => {
+    const el = item.querySelector(`.${k}`);
+    if (el) {
+        el.textContent = msg[k] ?? '';
+    }
+});
+
         let el = document.querySelector('.messages')
         if (el) el.scrollTop = el.scrollHeight
     }
@@ -210,7 +214,7 @@ new class {
     render_user(user) {
         let item = this.template_item('#user_item', '.right')
         item.id = `user-${user.id}`
-        item.querySelector('.name').innerHTML = user.nick
+       item.querySelector('.name').textContent = user.nick ?? '';
         if (user.id === this.my_data.id) item.querySelector('.name').style.color = "var(--active-color)"
     }
     render_rooms() {
