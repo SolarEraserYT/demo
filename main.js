@@ -1,10 +1,7 @@
 
 /*
   SolarEraser Chat
-  Step 43: Supabase connection test
-
-  This is a temporary connection-testing version.
-  Chat messages and commands are not enabled yet.
+  Step 46: Guest profile and public room joining
 */
 
 const SUPABASE_URL =
@@ -16,38 +13,160 @@ const SUPABASE_KEY =
 const messages = document.querySelector(".messages");
 const sendArea = document.querySelector(".send_area");
 const sendButton = document.querySelector(".send_button");
+const roomList = document.querySelector(".left");
+const userList = document.querySelector(".right");
 
-function showStatus(message) {
+let supabase;
+let myProfile = null;
+let currentRoom = null;
+let switchingRoom = false;
+
+const publicRooms = ["Main Room", "Spam"];
+
+sendArea.disabled = true;
+sendButton.disabled = true;
+sendArea.placeholder = "Connecting...";
+
+function status(text, color = "#bfc3d9") {
   const line = document.createElement("div");
-  line.style.padding = "8px";
-  line.style.lineHeight = "1.5";
+  line.textContent = text;
+  line.style.padding = "5px 10px";
+  line.style.color = color;
   line.style.overflowWrap = "anywhere";
-  line.textContent = message;
 
   messages.appendChild(line);
   messages.scrollTop = messages.scrollHeight;
 }
 
-function showError(error) {
-  console.error(error);
-  showStatus("❌ " + (error?.message || String(error)));
+function clearMessages() {
+  messages.replaceChildren();
 }
 
-// Prevent sending messages until the secure chat
-// messaging system is ready.
-sendArea.disabled = true;
-sendButton.disabled = true;
-sendArea.placeholder = "Connecting to Supabase...";
+function getProfileRow(data) {
+  if (Array.isArray(data)) {
+    return data[0] || null;
+  }
 
-async function startChat() {
-  showStatus("🔄 Connecting to Supabase...");
+  if (data && typeof data === "object") {
+    return data;
+  }
+
+  return null;
+}
+
+function renderProfile() {
+  userList.replaceChildren();
+
+  if (!myProfile) return;
+
+  const user = document.createElement("div");
+  user.className = "user_item";
+  user.style.padding = "10px";
+
+  const name = document.createElement("div");
+  name.className = "name";
+  name.textContent = myProfile.nickname;
+  name.style.color =
+    myProfile.nickname_color || "#ffffff";
+
+  user.appendChild(name);
+  userList.appendChild(user);
+}
+
+function renderRooms() {
+  roomList.replaceChildren();
+
+  for (const roomName of publicRooms) {
+    const item = document.createElement("div");
+    item.className = "room_item";
+    item.style.padding = "10px";
+    item.style.cursor = "pointer";
+
+    const label = document.createElement("div");
+    label.className = "name";
+    label.textContent = roomName;
+
+    if (currentRoom === roomName) {
+      label.style.color = "#9a8cff";
+      label.style.fontWeight = "bold";
+    }
+
+    item.appendChild(label);
+
+    item.addEventListener("click", () => {
+      joinPublicRoom(roomName);
+    });
+
+    roomList.appendChild(item);
+  }
+}
+
+async function joinPublicRoom(roomName) {
+  if (!supabase || switchingRoom) return;
+
+  if (!publicRooms.includes(roomName)) return;
+
+  if (currentRoom === roomName) return;
+
+  switchingRoom = true;
+  clearMessages();
+
+  status("Joining " + roomName + "...");
 
   try {
-    const { createClient } = await import(
+    const { data, error } = await supabase.rpc(
+      "join_public_chat_room",
+      { requested_name: roomName }
+    );
+
+    if (error) throw error;
+
+    if (!data) {
+      throw new Error("No room ID was returned.");
+    }
+
+    currentRoom = roomName;
+    renderRooms();
+
+    status(
+      "✓ Joined " + roomName,
+      "#80e6a3"
+    );
+
+    status(
+      "Signed in as " + myProfile.nickname,
+      myProfile.nickname_color || "#ffffff"
+    );
+
+    status(
+      "Live messaging is not enabled yet."
+    );
+
+    sendArea.placeholder =
+      roomName + " — messaging coming soon";
+
+  } catch (error) {
+    console.error("Room join failed:", error);
+
+    status(
+      "✗ Could not join " + roomName +
+      ": " + error.message,
+      "#ff8585"
+    );
+  } finally {
+    switchingRoom = false;
+  }
+}
+
+async function startChat() {
+  status("Connecting to Supabase...");
+
+  try {
+    const library = await import(
       "https://esm.sh/@supabase/supabase-js@2"
     );
 
-    const supabase = createClient(
+    supabase = library.createClient(
       SUPABASE_URL,
       SUPABASE_KEY,
       {
@@ -59,78 +178,72 @@ async function startChat() {
       }
     );
 
-    showStatus("✅ Supabase library loaded.");
-
-    // Reuse an existing anonymous login if possible.
     const {
       data: sessionData,
       error: sessionError
     } = await supabase.auth.getSession();
 
-    if (sessionError) {
-      throw sessionError;
-    }
+    if (sessionError) throw sessionError;
 
     let user = sessionData.session?.user;
 
-    // New visitors receive a Supabase anonymous login.
     if (!user) {
-      showStatus("🔄 Creating anonymous login...");
+      status("Creating your guest login...");
 
       const {
         data: authData,
         error: authError
       } = await supabase.auth.signInAnonymously();
 
-      if (authError) {
-        throw authError;
-      }
+      if (authError) throw authError;
 
       user = authData.user;
     }
 
     if (!user) {
-      throw new Error("No user returned by Supabase.");
+      throw new Error("Anonymous login failed.");
     }
 
-    showStatus("✅ Anonymous login successful!");
-    showStatus("🔐 Connected as an anonymous visitor.");
+    status("✓ Guest login successful!", "#80e6a3");
 
-    // Check whether the chat account has been created.
     const {
-      data: profile,
+      data: profileData,
       error: profileError
     } = await supabase.rpc("my_chat_profile");
 
-    if (profileError) {
-      showStatus(
-        "⚠️ Chat profile lookup: " +
-        profileError.message
-      );
-    } else if (profile && (
-      Array.isArray(profile)
-        ? profile.length > 0
-        : true
-    )) {
-      showStatus("✅ Chat profile found!");
-    } else {
-      showStatus(
-        "⚠️ Anonymous login works, but this visitor " +
-        "does not have a chat profile yet."
+    if (profileError) throw profileError;
+
+    myProfile = getProfileRow(profileData);
+
+    if (!myProfile || !myProfile.nickname) {
+      throw new Error(
+        "No chat profile found for this guest."
       );
     }
 
-    showStatus(
-      "🛠️ Connection test complete. " +
-      "Live chat will be enabled in a later step."
+    status(
+      "✓ Welcome, " + myProfile.nickname + "!",
+      "#80e6a3"
     );
 
-    sendArea.placeholder = "Chat setup in progress";
+    renderProfile();
+    renderRooms();
+
+    await joinPublicRoom("Main Room");
 
   } catch (error) {
-    showError(error);
-    sendArea.placeholder = "Connection test failed";
+    console.error("Chat startup failed:", error);
+
+    status(
+      "✗ " + error.message,
+      "#ff8585"
+    );
+
+    sendArea.placeholder = "Connection failed";
   }
 }
+
+// Message sending stays disabled until the
+// server-side live messaging system is ready.
 
 startChat();
