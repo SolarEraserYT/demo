@@ -1,10 +1,8 @@
 
 /*
-  SolarEraser Chat — Step 50O
-  Realtime Presence authorization diagnostics
-
-  Preserves working server-side messaging.
-  Does not store chat history.
+  SolarEraser Chat — Step 81
+  Live messaging, Presence, and nickname commands.
+  No chat history.
 */
 
 const SUPABASE_URL =
@@ -452,9 +450,73 @@ async function joinRoom(roomName) {
   }
 }
 
+// Public room switching.
 roomSelector.addEventListener("change", () => {
   joinRoom(roomSelector.value);
 });
+
+// Nickname commands stay private and never become chat messages.
+async function changeNickname(rawNickname) {
+  const nickname = rawNickname.trim();
+
+  if (
+    !nickname ||
+    nickname.length > 15 ||
+    !/^[A-Za-z0-9_]+$/.test(nickname)
+  ) {
+    privateWarning(
+      "Nicknames must be 1–15 characters: letters, numbers, or underscores."
+    );
+    return;
+  }
+
+  const { data, error } = await supabase.rpc(
+    "change_chat_nickname",
+    { p_nickname: nickname }
+  );
+
+  if (error) {
+    privateWarning(error.message);
+    return;
+  }
+
+  const savedNickname =
+    typeof data === "string" ? data : nickname;
+
+  profile.nickname = savedNickname;
+
+  // Update the live online list without disconnecting.
+  if (channel && presenceWorking) {
+    try {
+      const result = await channel.track({
+        account_id: profile.account_id,
+        nickname: savedNickname,
+        nickname_color: validColor(
+          profile.nickname_color
+        )
+      });
+
+      if (result !== "ok") {
+        privateWarning(
+          "Nickname saved, but the online list may need a reconnect."
+        );
+      }
+    } catch (error) {
+      console.warn(
+        "[Presence] Nickname update warning:",
+        error
+      );
+
+      privateWarning(
+        "Nickname saved, but the online list may need a reconnect."
+      );
+    }
+  }
+
+  privateWarning(
+    "Your nickname is now " + savedNickname + "."
+  );
+}
 
 async function sendMessage() {
   if (busy || switching || !currentRoomId) return;
@@ -462,6 +524,38 @@ async function sendMessage() {
   const content = sendArea.value.trim();
 
   if (!content) return;
+
+  // Commands never reach the public message function.
+  if (content.startsWith("/")) {
+    busy = true;
+
+    try {
+      const match = content.match(
+        /^\/(?:nick|n)(?:\s+(.*))?$/i
+      );
+
+      if (match) {
+        await changeNickname(match[1] || "");
+      } else {
+        privateWarning(
+          "Unknown command. Try /nick NAME or /n NAME."
+        );
+      }
+
+      sendArea.value = "";
+
+    } catch (error) {
+      privateWarning(
+        "Command failed: " + error.message
+      );
+
+    } finally {
+      busy = false;
+      sendArea.focus();
+    }
+
+    return;
+  }
 
   busy = true;
 
@@ -567,7 +661,10 @@ async function startChat() {
     await joinRoom("Main Room");
 
   } catch (error) {
-    console.error("[Chat] Startup failed:", error);
+    console.error(
+      "[Chat] Startup failed:",
+      error
+    );
 
     setStatus(
       "Startup failed: " + error.message,
