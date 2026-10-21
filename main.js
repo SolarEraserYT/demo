@@ -1,11 +1,7 @@
 
 /*
-  SolarEraser Chat — Step 50E
-  Live messaging + online presence TEST
-
-  Public rooms only.
-  Presence nicknames are provisional until we add
-  server-verified profile lookup.
+  SolarEraser Chat — Step 50G
+  Live chat + Presence diagnostics
 */
 
 const SUPABASE_URL =
@@ -43,7 +39,7 @@ sendArea.disabled = true;
 sendButton.disabled = true;
 sendArea.placeholder = "Connecting...";
 
-// Temporary connection status, outside chat history.
+// Temporary connection status.
 const statusBar = document.createElement("div");
 
 statusBar.style.cssText = [
@@ -56,8 +52,7 @@ statusBar.style.cssText = [
   "color:#aaa8ca",
   "background:#171a24",
   "padding:3px 8px",
-  "border-radius:5px",
-  "max-width:max-content"
+  "border-radius:5px"
 ].join(";");
 
 document.body.appendChild(statusBar);
@@ -92,9 +87,7 @@ function validColor(value) {
 }
 
 function displayMessage(data) {
-  if (!data || typeof data.content !== "string") {
-    return;
-  }
+  if (!data || typeof data.content !== "string") return;
 
   const line = document.createElement("div");
   line.className = "message_item";
@@ -121,7 +114,7 @@ function displayMessage(data) {
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Room dropdown above the online-user list.
+// Room selector.
 const roomSelector = document.createElement("select");
 
 roomSelector.setAttribute(
@@ -151,23 +144,29 @@ const userNames = document.createElement("div");
 
 userList.replaceChildren(roomSelector, userNames);
 
-// Render connected users from Supabase Presence.
-// This is a functional test, not trusted identity verification.
 function renderUsers() {
   userNames.replaceChildren();
 
-  if (!channel || !currentRoomId) return;
+  if (!channel) {
+    console.log("[Presence] No active channel.");
+    return;
+  }
 
   const state = channel.presenceState();
+
+  // Step 50G: diagnostic logging.
+  console.log("[Presence] STATE:", state);
+
   const people = new Map();
 
   for (const entries of Object.values(state)) {
+    if (!Array.isArray(entries)) continue;
+
     for (const entry of entries) {
       if (!entry || !entry.account_id) continue;
 
       const accountId = String(entry.account_id);
 
-      // Collapse multiple tabs for the same account.
       if (!people.has(accountId)) {
         people.set(accountId, {
           nickname: String(entry.nickname || "Guest"),
@@ -176,6 +175,11 @@ function renderUsers() {
       }
     }
   }
+
+  console.log(
+    "[Presence] Connected accounts:",
+    people.size
+  );
 
   const sortedPeople = [...people.values()].sort(
     (a, b) => a.nickname.localeCompare(b.nickname)
@@ -206,20 +210,20 @@ function setInputReady(ready) {
 }
 
 async function leaveChannel() {
-  if (channel && supabase) {
-    const oldChannel = channel;
-    channel = null;
+  if (!channel || !supabase) return;
 
-    userNames.replaceChildren();
+  const oldChannel = channel;
+  channel = null;
 
-    try {
-      await oldChannel.untrack();
-    } catch (error) {
-      console.warn("Untrack warning:", error);
-    }
+  userNames.replaceChildren();
 
-    await supabase.removeChannel(oldChannel);
+  try {
+    await oldChannel.untrack();
+  } catch (error) {
+    console.warn("[Presence] Untrack:", error);
   }
+
+  await supabase.removeChannel(oldChannel);
 }
 
 async function joinRoom(roomName) {
@@ -249,19 +253,27 @@ async function joinRoom(roomName) {
       });
 
     if (joinError) throw joinError;
+
     if (!roomId) {
       throw new Error("No room ID returned.");
     }
 
-    const topic = "chat-room:" + roomId;
+    console.log(
+      "[Presence] Joining room:",
+      roomName,
+      roomId
+    );
 
-    const newChannel = supabase.channel(topic, {
-      config: {
-        private: true,
-        broadcast: { self: true },
-        presence: { key: authUserId }
+    const newChannel = supabase.channel(
+      "chat-room:" + roomId,
+      {
+        config: {
+          private: true,
+          broadcast: { self: true },
+          presence: { key: authUserId }
+        }
       }
-    });
+    );
 
     newChannel.on(
       "broadcast",
@@ -276,6 +288,8 @@ async function joinRoom(roomName) {
       "presence",
       { event: "sync" },
       () => {
+        console.log("[Presence] SYNC event");
+
         if (channel === newChannel) {
           renderUsers();
         }
@@ -286,6 +300,8 @@ async function joinRoom(roomName) {
       "presence",
       { event: "join" },
       () => {
+        console.log("[Presence] JOIN event");
+
         if (channel === newChannel) {
           renderUsers();
         }
@@ -296,6 +312,8 @@ async function joinRoom(roomName) {
       "presence",
       { event: "leave" },
       () => {
+        console.log("[Presence] LEAVE event");
+
         if (channel === newChannel) {
           renderUsers();
         }
@@ -307,7 +325,7 @@ async function joinRoom(roomName) {
     } = await supabase.auth.getSession();
 
     if (!session) {
-      throw new Error("Your login session expired.");
+      throw new Error("Login session expired.");
     }
 
     await supabase.realtime.setAuth(
@@ -318,6 +336,12 @@ async function joinRoom(roomName) {
 
     await new Promise((resolve, reject) => {
       newChannel.subscribe((state, error) => {
+        console.log(
+          "[Presence] Subscription:",
+          state,
+          error || ""
+        );
+
         if (state === "SUBSCRIBED") {
           resolve();
         } else if (
@@ -336,25 +360,43 @@ async function joinRoom(roomName) {
     currentRoomId = roomId;
     roomSelector.value = roomName;
 
-    // Publish our presence to this room.
-    const { error: trackError } =
-      await newChannel.track({
-        account_id: profile.account_id,
-        nickname: profile.nickname,
-        nickname_color: validColor(
-          profile.nickname_color
-        )
-      });
+    const presencePayload = {
+      account_id: profile.account_id,
+      nickname: profile.nickname,
+      nickname_color: validColor(
+        profile.nickname_color
+      )
+    };
 
-    if (trackError) throw trackError;
+    console.log(
+      "[Presence] Tracking:",
+      presencePayload
+    );
 
+    const trackResult =
+      await newChannel.track(presencePayload);
+
+    console.log(
+      "[Presence] Track result:",
+      trackResult
+    );
+
+    if (trackResult?.error) {
+      throw trackResult.error;
+    }
+
+    // Give Supabase time to send the first sync event.
     renderUsers();
+
     setInputReady(true);
     setStatus("Connected to " + roomName);
     sendArea.focus();
 
   } catch (error) {
-    console.error("Room connection failed:", error);
+    console.error(
+      "[Presence] Room connection failed:",
+      error
+    );
 
     setStatus(
       "Room connection failed: " + error.message,
@@ -398,12 +440,9 @@ async function sendMessage() {
       return;
     }
 
-    // Server broadcasts the accepted message.
     sendArea.value = "";
 
   } catch (error) {
-    console.error(error);
-
     privateWarning(
       "Could not send message: " + error.message
     );
@@ -463,6 +502,7 @@ async function startChat() {
     } = await supabase.auth.getUser();
 
     if (userError) throw userError;
+
     if (!user) {
       throw new Error("Guest login failed.");
     }
@@ -477,13 +517,18 @@ async function startChat() {
     profile = getProfile(data);
 
     if (!profile?.nickname || !profile?.account_id) {
-      throw new Error("Chat profile was not found.");
+      throw new Error("Chat profile not found.");
     }
+
+    console.log(
+      "[Presence] Logged in as:",
+      profile.nickname
+    );
 
     await joinRoom("Main Room");
 
   } catch (error) {
-    console.error("Startup failed:", error);
+    console.error("[Chat] Startup failed:", error);
 
     setStatus(
       "Startup failed: " + error.message,
