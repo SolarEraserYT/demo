@@ -1,7 +1,10 @@
 
 /*
-  SolarEraser Chat — Step 50G
-  Live chat + Presence diagnostics
+  SolarEraser Chat — Step 50O
+  Realtime Presence authorization diagnostics
+
+  Preserves working server-side messaging.
+  Does not store chat history.
 */
 
 const SUPABASE_URL =
@@ -27,6 +30,8 @@ let currentRoomId = null;
 let channel = null;
 let switching = false;
 let busy = false;
+let presenceWorking = false;
+let connectionNumber = 0;
 
 leftPanel.style.display = "none";
 
@@ -39,7 +44,6 @@ sendArea.disabled = true;
 sendButton.disabled = true;
 sendArea.placeholder = "Connecting...";
 
-// Temporary connection status.
 const statusBar = document.createElement("div");
 
 statusBar.style.cssText = [
@@ -62,7 +66,7 @@ function setStatus(text, error = false) {
   statusBar.style.color =
     error ? "#ff9393" : "#aaa8ca";
 
-  if (error) console.error(text);
+  console.log("[Chat status]", text);
 }
 
 function privateWarning(text) {
@@ -87,7 +91,9 @@ function validColor(value) {
 }
 
 function displayMessage(data) {
-  if (!data || typeof data.content !== "string") return;
+  if (!data || typeof data.content !== "string") {
+    return;
+  }
 
   const line = document.createElement("div");
   line.className = "message_item";
@@ -114,7 +120,7 @@ function displayMessage(data) {
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Room selector.
+// Room selector stays above the usernames.
 const roomSelector = document.createElement("select");
 
 roomSelector.setAttribute(
@@ -147,17 +153,12 @@ userList.replaceChildren(roomSelector, userNames);
 function renderUsers() {
   userNames.replaceChildren();
 
-  if (!channel) {
-    console.log("[Presence] No active channel.");
-    return;
-  }
+  if (!channel || !presenceWorking) return;
 
   const state = channel.presenceState();
-
-  // Step 50G: diagnostic logging.
-  console.log("[Presence] STATE:", state);
-
   const people = new Map();
+
+  console.log("[Presence] State:", state);
 
   for (const entries of Object.values(state)) {
     if (!Array.isArray(entries)) continue;
@@ -177,15 +178,15 @@ function renderUsers() {
   }
 
   console.log(
-    "[Presence] Connected accounts:",
+    "[Presence] Users found:",
     people.size
   );
 
-  const sortedPeople = [...people.values()].sort(
+  const sorted = [...people.values()].sort(
     (a, b) => a.nickname.localeCompare(b.nickname)
   );
 
-  for (const person of sortedPeople) {
+  for (const person of sorted) {
     const item = document.createElement("div");
     item.className = "user_item";
     item.style.padding = "5px 8px";
@@ -209,18 +210,47 @@ function setInputReady(ready) {
     : "Connecting to room...";
 }
 
+async function refreshRealtimeAuth() {
+  const { data, error } =
+    await supabase.auth.refreshSession();
+
+  if (error) throw error;
+
+  const session = data.session;
+
+  if (!session?.access_token) {
+    throw new Error("Could not refresh login.");
+  }
+
+  await supabase.realtime.setAuth(
+    session.access_token
+  );
+
+  console.log(
+    "[Presence] Authentication refreshed:",
+    Boolean(session.access_token)
+  );
+
+  // Never print the actual authentication token.
+  return session;
+}
+
 async function leaveChannel() {
   if (!channel || !supabase) return;
 
   const oldChannel = channel;
   channel = null;
+  presenceWorking = false;
 
   userNames.replaceChildren();
 
   try {
     await oldChannel.untrack();
   } catch (error) {
-    console.warn("[Presence] Untrack:", error);
+    console.warn(
+      "[Presence] Untrack warning:",
+      error
+    );
   }
 
   await supabase.removeChannel(oldChannel);
@@ -238,7 +268,7 @@ async function joinRoom(roomName) {
   switching = true;
   setInputReady(false);
 
-  const previousRoom = currentRoom;
+  const attempt = ++connectionNumber;
 
   try {
     await leaveChannel();
@@ -258,11 +288,8 @@ async function joinRoom(roomName) {
       throw new Error("No room ID returned.");
     }
 
-    console.log(
-      "[Presence] Joining room:",
-      roomName,
-      roomId
-    );
+    // Refresh credentials before joining Realtime.
+    await refreshRealtimeAuth();
 
     const newChannel = supabase.channel(
       "chat-room:" + roomId,
@@ -288,7 +315,7 @@ async function joinRoom(roomName) {
       "presence",
       { event: "sync" },
       () => {
-        console.log("[Presence] SYNC event");
+        console.log("[Presence] SYNC");
 
         if (channel === newChannel) {
           renderUsers();
@@ -300,8 +327,6 @@ async function joinRoom(roomName) {
       "presence",
       { event: "join" },
       () => {
-        console.log("[Presence] JOIN event");
-
         if (channel === newChannel) {
           renderUsers();
         }
@@ -312,24 +337,10 @@ async function joinRoom(roomName) {
       "presence",
       { event: "leave" },
       () => {
-        console.log("[Presence] LEAVE event");
-
         if (channel === newChannel) {
           renderUsers();
         }
       }
-    );
-
-    const {
-      data: { session }
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      throw new Error("Login session expired.");
-    }
-
-    await supabase.realtime.setAuth(
-      session.access_token
     );
 
     channel = newChannel;
@@ -350,17 +361,23 @@ async function joinRoom(roomName) {
           state === "CLOSED"
         ) {
           reject(
-            error || new Error("Realtime connection failed")
+            error || new Error("Realtime subscription failed")
           );
         }
       });
     });
 
+    if (attempt !== connectionNumber) return;
+
     currentRoom = roomName;
     currentRoomId = roomId;
     roomSelector.value = roomName;
 
-    const presencePayload = {
+    // Chat remains usable even if Presence fails.
+    setInputReady(true);
+    setStatus("Connected to " + roomName);
+
+    const payload = {
       account_id: profile.account_id,
       nickname: profile.nickname,
       nickname_color: validColor(
@@ -368,33 +385,55 @@ async function joinRoom(roomName) {
       )
     };
 
-    console.log(
-      "[Presence] Tracking:",
-      presencePayload
-    );
+    console.log("[Presence] Attempting track");
 
-    const trackResult =
-      await newChannel.track(presencePayload);
+    let result;
 
-    console.log(
-      "[Presence] Track result:",
-      trackResult
-    );
+    try {
+      result = await newChannel.track(payload);
+    } catch (error) {
+      console.error(
+        "[Presence] Track exception:",
+        error
+      );
 
-    if (trackResult?.error) {
-      throw trackResult.error;
+      result = "error";
     }
 
-    // Give Supabase time to send the first sync event.
-    renderUsers();
+    console.log(
+      "[Presence] TRACK RESULT:",
+      result
+    );
 
-    setInputReady(true);
-    setStatus("Connected to " + roomName);
+    // Supabase track() returns a status string.
+    if (result === "ok") {
+      presenceWorking = true;
+      renderUsers();
+
+      console.log(
+        "[Presence] SUCCESS — online tracking active"
+      );
+    } else {
+      presenceWorking = false;
+      userNames.replaceChildren();
+
+      console.warn(
+        "[Presence] FAILED — tracking rejected.",
+        "Status:",
+        result
+      );
+
+      setStatus(
+        "Chat connected; online list unavailable",
+        true
+      );
+    }
+
     sendArea.focus();
 
   } catch (error) {
     console.error(
-      "[Presence] Room connection failed:",
+      "[Chat] Connection error:",
       error
     );
 
@@ -403,7 +442,6 @@ async function joinRoom(roomName) {
       true
     );
 
-    roomSelector.value = previousRoom || "Main Room";
     currentRoom = null;
     currentRoomId = null;
 
@@ -422,6 +460,7 @@ async function sendMessage() {
   if (busy || switching || !currentRoomId) return;
 
   const content = sendArea.value.trim();
+
   if (!content) return;
 
   busy = true;
@@ -521,7 +560,7 @@ async function startChat() {
     }
 
     console.log(
-      "[Presence] Logged in as:",
+      "[Chat] Logged in as:",
       profile.nickname
     );
 
