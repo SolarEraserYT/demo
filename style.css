@@ -520,3 +520,18 @@ input[type="text"]:focus {
         padding: 18px;
     }
 }
+
+/* SolarEraser Chat — Owner/Admin Glow */
+
+.nick.chat-glow,
+.name.chat-glow {
+  color: var(--glow-color, #ffffff) !important;
+
+  text-shadow:
+    0 0 3px var(--glow-color, #ffffff),
+    0 0 7px var(--glow-color, #ffffff),
+    0 0 14px var(--glow-color, #ffffff),
+    0 0 24px var(--glow-color, #ffffff);
+
+  font-weight: 700;
+}
