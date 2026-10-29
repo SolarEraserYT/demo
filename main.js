@@ -1566,3 +1566,206 @@ async function changeNickname(rawNickname) {
     "Your nickname is now " + profile.nickname + "."
   );
 }
+
+// STEP 104 — Everyone can see verified glows.
+// Owner/admin/manager: glow in every room.
+// Private room owner / granted glow: room-specific.
+// Spam: everyone glows.
+// Permissions come from Supabase, never from user Presence.
+
+const verifiedRoomGlows = new Map();
+let glowRoomId = null;
+let glowRequestRunning = false;
+let glowRefreshTimer = null;
+
+function repaintVerifiedGlows() {
+  const elements = document.querySelectorAll(
+    ".right .name[data-account-id], " +
+    ".messages .nick[data-account-id]"
+  );
+
+  for (const element of elements) {
+    const id = element.dataset.accountId;
+    const hasGlow = verifiedRoomGlows.get(id) === true;
+
+    element.classList.toggle("chat-glow", hasGlow);
+
+    if (hasGlow) {
+      const color = validColor(
+        element.style.color ||
+        (
+          id === String(profile?.account_id)
+            ? profile.nickname_color
+            : "#FFFFFF"
+        )
+      );
+
+      // style.color may be an RGB string.
+      // Convert it to a valid hex color when needed.
+      let glowColor = color;
+
+      if (
+        color === "#FFFFFF" &&
+        element.style.color.startsWith("rgb")
+      ) {
+        const numbers =
+          element.style.color.match(/\d+/g);
+
+        if (numbers && numbers.length >= 3) {
+          glowColor = "#" + numbers
+            .slice(0, 3)
+            .map(number =>
+              Number(number)
+                .toString(16)
+                .padStart(2, "0")
+            )
+            .join("")
+            .toUpperCase();
+        }
+      }
+
+      element.style.setProperty(
+        "--glow-color",
+        glowColor
+      );
+    } else {
+      element.style.removeProperty("--glow-color");
+    }
+  }
+}
+
+async function refreshVerifiedGlows() {
+  if (
+    !supabase ||
+    !currentRoomId ||
+    !channel ||
+    glowRequestRunning
+  ) return;
+
+  const requestedRoom = String(currentRoomId);
+  glowRequestRunning = true;
+
+  try {
+    const { data, error } = await supabase.rpc(
+      "get_chat_room_glow",
+      { p_room_id: requestedRoom }
+    );
+
+    if (error) throw error;
+
+    // Ignore a response from a room we already left.
+    if (String(currentRoomId) !== requestedRoom) {
+      return;
+    }
+
+    verifiedRoomGlows.clear();
+
+    for (const person of data || []) {
+      verifiedRoomGlows.set(
+        String(person.account_id),
+        person.has_glow === true
+      );
+    }
+
+    glowRoomId = requestedRoom;
+    repaintVerifiedGlows();
+
+  } catch (error) {
+    console.warn(
+      "[Glow] Could not refresh verified permissions:",
+      error.message
+    );
+  } finally {
+    glowRequestRunning = false;
+
+    // If we switched rooms during the request,
+    // immediately refresh for the new room.
+    if (
+      currentRoomId &&
+      String(currentRoomId) !== requestedRoom
+    ) {
+      scheduleGlowRefresh();
+    }
+  }
+}
+
+function scheduleGlowRefresh() {
+  clearTimeout(glowRefreshTimer);
+
+  glowRefreshTimer = setTimeout(() => {
+    refreshVerifiedGlows();
+  }, 250);
+}
+
+// Replace the old self-only glow logic.
+// Existing chat rendering will automatically use this.
+applyOwnGlow = function(element, accountId) {
+  const id = String(accountId || "");
+
+  element.dataset.accountId = id;
+
+  // Never trust role/glow claims from the browser.
+  const hasGlow =
+    glowRoomId === String(currentRoomId) &&
+    verifiedRoomGlows.get(id) === true;
+
+  element.classList.toggle("chat-glow", hasGlow);
+
+  if (hasGlow) {
+    element.style.setProperty(
+      "--glow-color",
+      validColor(
+        id === String(profile?.account_id)
+          ? profile.nickname_color
+          : "#FFFFFF"
+      )
+    );
+  } else {
+    element.style.removeProperty("--glow-color");
+  }
+};
+
+// Every Presence update rebuilds the user list.
+// Refresh server-verified glow permissions too.
+const originalRenderUsers = renderUsers;
+
+renderUsers = function() {
+  originalRenderUsers();
+
+  if (glowRoomId !== String(currentRoomId)) {
+    verifiedRoomGlows.clear();
+    glowRoomId = null;
+  }
+
+  repaintVerifiedGlows();
+  scheduleGlowRefresh();
+};
+
+// Messages also receive verified glow permissions.
+// Newly arrived users may not be in the cache yet.
+const originalDisplayMessage = displayMessage;
+
+displayMessage = function(data) {
+  originalDisplayMessage(data);
+
+  repaintVerifiedGlows();
+
+  if (
+    data?.account_id &&
+    !verifiedRoomGlows.has(String(data.account_id))
+  ) {
+    scheduleGlowRefresh();
+  }
+};
+
+// Recheck periodically for room-owner transfers,
+// newly granted glows, and admin role changes.
+setInterval(() => {
+  if (currentRoomId && channel) {
+    refreshVerifiedGlows();
+  }
+}, 12000);
+
+console.log(
+  "[Glow] Server-verified room glow enabled!"
+);
