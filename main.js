@@ -1,7 +1,9 @@
 
 /*
-  SolarEraser Chat — Step 81
-  Live messaging, Presence, and nickname commands.
+  SolarEraser Chat — Step 83
+  Public rooms, private rooms, nickname commands,
+  live messaging, and Realtime Presence.
+
   No chat history.
 */
 
@@ -25,6 +27,7 @@ let profile = null;
 let authUserId = null;
 let currentRoom = null;
 let currentRoomId = null;
+let currentRoomType = null;
 let channel = null;
 let switching = false;
 let busy = false;
@@ -118,7 +121,7 @@ function displayMessage(data) {
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Room selector stays above the usernames.
+// Public room selector.
 const roomSelector = document.createElement("select");
 
 roomSelector.setAttribute(
@@ -147,6 +150,32 @@ for (const roomName of PUBLIC_ROOMS) {
 const userNames = document.createElement("div");
 
 userList.replaceChildren(roomSelector, userNames);
+
+// Display the current room without listing private
+// rooms as publicly discoverable rooms.
+function updateRoomSelector() {
+  const oldPrivateOption =
+    roomSelector.querySelector(
+      'option[data-private-room="true"]'
+    );
+
+  if (oldPrivateOption) {
+    oldPrivateOption.remove();
+  }
+
+  if (currentRoomType === "private") {
+    const option = document.createElement("option");
+
+    option.value = "__private_current__";
+    option.textContent = "Private: " + currentRoom;
+    option.dataset.privateRoom = "true";
+
+    roomSelector.appendChild(option);
+    roomSelector.value = "__private_current__";
+  } else if (currentRoomType === "public") {
+    roomSelector.value = currentRoom;
+  }
+}
 
 function renderUsers() {
   userNames.replaceChildren();
@@ -229,7 +258,6 @@ async function refreshRealtimeAuth() {
     Boolean(session.access_token)
   );
 
-  // Never print the actual authentication token.
   return session;
 }
 
@@ -237,9 +265,9 @@ async function leaveChannel() {
   if (!channel || !supabase) return;
 
   const oldChannel = channel;
+
   channel = null;
   presenceWorking = false;
-
   userNames.replaceChildren();
 
   try {
@@ -254,13 +282,44 @@ async function leaveChannel() {
   await supabase.removeChannel(oldChannel);
 }
 
-async function joinRoom(roomName) {
-  if (!supabase || !profile || switching) return;
-  if (!PUBLIC_ROOMS.includes(roomName)) return;
+// Shared room connection for public and private rooms.
+async function joinRoom(roomName, roomType = "public") {
+  if (!supabase || !profile || switching) return false;
 
-  if (currentRoom === roomName && channel) {
-    roomSelector.value = roomName;
-    return;
+  if (
+    roomType !== "public" &&
+    roomType !== "private"
+  ) {
+    return false;
+  }
+
+  if (
+    roomType === "public" &&
+    !PUBLIC_ROOMS.includes(roomName)
+  ) {
+    return false;
+  }
+
+  if (roomType === "private") {
+    roomName = roomName.trim().toLowerCase();
+
+    if (
+      !/^[a-z0-9_-]{1,32}$/.test(roomName)
+    ) {
+      privateWarning(
+        "Private room names must be 1–32 characters: letters, numbers, underscores, or hyphens."
+      );
+      return false;
+    }
+  }
+
+  if (
+    currentRoom === roomName &&
+    currentRoomType === roomType &&
+    channel
+  ) {
+    updateRoomSelector();
+    return true;
   }
 
   switching = true;
@@ -269,14 +328,15 @@ async function joinRoom(roomName) {
   const attempt = ++connectionNumber;
 
   try {
-    await leaveChannel();
-
-    messages.replaceChildren();
-    currentRoom = null;
-    currentRoomId = null;
+    // Ask the database to join the new room first.
+    // If this fails, we keep the old connection.
+    const functionName =
+      roomType === "private"
+        ? "join_private_chat_room"
+        : "join_public_chat_room";
 
     const { data: roomId, error: joinError } =
-      await supabase.rpc("join_public_chat_room", {
+      await supabase.rpc(functionName, {
         requested_name: roomName
       });
 
@@ -286,7 +346,16 @@ async function joinRoom(roomName) {
       throw new Error("No room ID returned.");
     }
 
-    // Refresh credentials before joining Realtime.
+    // Remove the old Presence connection.
+    await leaveChannel();
+
+    // No history is carried between rooms.
+    messages.replaceChildren();
+
+    currentRoom = null;
+    currentRoomId = null;
+    currentRoomType = null;
+
     await refreshRealtimeAuth();
 
     const newChannel = supabase.channel(
@@ -359,21 +428,28 @@ async function joinRoom(roomName) {
           state === "CLOSED"
         ) {
           reject(
-            error || new Error("Realtime subscription failed")
+            error ||
+            new Error("Realtime subscription failed")
           );
         }
       });
     });
 
-    if (attempt !== connectionNumber) return;
+    if (attempt !== connectionNumber) return false;
 
     currentRoom = roomName;
     currentRoomId = roomId;
-    roomSelector.value = roomName;
+    currentRoomType = roomType;
 
-    // Chat remains usable even if Presence fails.
+    updateRoomSelector();
+
     setInputReady(true);
-    setStatus("Connected to " + roomName);
+
+    setStatus(
+      "Connected to " +
+      (roomType === "private" ? "private room " : "") +
+      roomName
+    );
 
     const payload = {
       account_id: profile.account_id,
@@ -403,7 +479,6 @@ async function joinRoom(roomName) {
       result
     );
 
-    // Supabase track() returns a status string.
     if (result === "ok") {
       presenceWorking = true;
       renderUsers();
@@ -428,6 +503,7 @@ async function joinRoom(roomName) {
     }
 
     sendArea.focus();
+    return true;
 
   } catch (error) {
     console.error(
@@ -440,22 +516,41 @@ async function joinRoom(roomName) {
       true
     );
 
-    currentRoom = null;
-    currentRoomId = null;
+    privateWarning(
+      "Could not join room: " + error.message
+    );
 
-    await leaveChannel();
+    // If the previous channel was already removed,
+    // the page can be refreshed to reconnect.
+    if (!channel) {
+      currentRoom = null;
+      currentRoomId = null;
+      currentRoomType = null;
+    }
+
+    return false;
 
   } finally {
     switching = false;
+
+    setInputReady(
+      Boolean(currentRoomId && channel)
+    );
+
+    updateRoomSelector();
   }
 }
 
 // Public room switching.
 roomSelector.addEventListener("change", () => {
-  joinRoom(roomSelector.value);
+  if (roomSelector.value === "__private_current__") {
+    return;
+  }
+
+  joinRoom(roomSelector.value, "public");
 });
 
-// Nickname commands stay private and never become chat messages.
+// Nickname commands.
 async function changeNickname(rawNickname) {
   const nickname = rawNickname.trim();
 
@@ -485,7 +580,6 @@ async function changeNickname(rawNickname) {
 
   profile.nickname = savedNickname;
 
-  // Update the live online list without disconnecting.
   if (channel && presenceWorking) {
     try {
       const result = await channel.track({
@@ -518,6 +612,40 @@ async function changeNickname(rawNickname) {
   );
 }
 
+// Command handler.
+async function handleCommand(content) {
+  const nicknameMatch = content.match(
+    /^\/(?:nick|n)(?:\s+(.*))?$/i
+  );
+
+  if (nicknameMatch) {
+    await changeNickname(nicknameMatch[1] || "");
+    return;
+  }
+
+  const joinMatch = content.match(
+    /^\/(?:j|join)(?:\s+(.*))?$/i
+  );
+
+  if (joinMatch) {
+    const requestedRoom = (joinMatch[1] || "").trim();
+
+    if (!requestedRoom) {
+      privateWarning(
+        "Usage: /j ROOM or /join ROOM"
+      );
+      return;
+    }
+
+    await joinRoom(requestedRoom, "private");
+    return;
+  }
+
+  privateWarning(
+    "Unknown command. Available: /nick, /n, /j, /join."
+  );
+}
+
 async function sendMessage() {
   if (busy || switching || !currentRoomId) return;
 
@@ -525,41 +653,16 @@ async function sendMessage() {
 
   if (!content) return;
 
-  // Commands never reach the public message function.
-  if (content.startsWith("/")) {
-    busy = true;
-
-    try {
-      const match = content.match(
-        /^\/(?:nick|n)(?:\s+(.*))?$/i
-      );
-
-      if (match) {
-        await changeNickname(match[1] || "");
-      } else {
-        privateWarning(
-          "Unknown command. Try /nick NAME or /n NAME."
-        );
-      }
-
-      sendArea.value = "";
-
-    } catch (error) {
-      privateWarning(
-        "Command failed: " + error.message
-      );
-
-    } finally {
-      busy = false;
-      sendArea.focus();
-    }
-
-    return;
-  }
-
   busy = true;
 
   try {
+    // Commands are never sent as public messages.
+    if (content.startsWith("/")) {
+      sendArea.value = "";
+      await handleCommand(content);
+      return;
+    }
+
     const { error } = await supabase.rpc(
       "send_chat_message",
       {
@@ -582,7 +685,10 @@ async function sendMessage() {
 
   } finally {
     busy = false;
-    sendArea.focus();
+
+    if (!sendArea.disabled) {
+      sendArea.focus();
+    }
   }
 }
 
@@ -658,13 +764,10 @@ async function startChat() {
       profile.nickname
     );
 
-    await joinRoom("Main Room");
+    await joinRoom("Main Room", "public");
 
   } catch (error) {
-    console.error(
-      "[Chat] Startup failed:",
-      error
-    );
+    console.error("[Chat] Startup failed:", error);
 
     setStatus(
       "Startup failed: " + error.message,
