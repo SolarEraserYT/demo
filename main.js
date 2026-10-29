@@ -1,9 +1,8 @@
 
 /*
-  SolarEraser Chat — Step 83
-  Public rooms, private rooms, nickname commands,
+  SolarEraser Chat — Step 90
+  Owner glow, private rooms, nickname commands,
   live messaging, and Realtime Presence.
-
   No chat history.
 */
 
@@ -33,6 +32,26 @@ let switching = false;
 let busy = false;
 let presenceWorking = false;
 let connectionNumber = 0;
+let verifiedOwner = false;
+
+function validColor(value) {
+  return /^#[0-9a-f]{6}$/i.test(value || "")
+    ? value
+    : "#ffffff";
+}
+
+function applyOwnGlow(element, accountId) {
+  if (
+    verifiedOwner &&
+    String(accountId) === String(profile?.account_id)
+  ) {
+    element.classList.add("chat-glow");
+    element.style.setProperty(
+      "--glow-color",
+      validColor(profile.nickname_color)
+    );
+  }
+}
 
 leftPanel.style.display = "none";
 
@@ -85,12 +104,6 @@ function getProfile(data) {
   return Array.isArray(data) ? data[0] : data;
 }
 
-function validColor(value) {
-  return /^#[0-9a-f]{6}$/i.test(value || "")
-    ? value
-    : "#ffffff";
-}
-
 function displayMessage(data) {
   if (!data || typeof data.content !== "string") {
     return;
@@ -112,6 +125,8 @@ function displayMessage(data) {
   nick.textContent = String(data.nickname || "Guest");
   nick.style.color = validColor(data.nickname_color);
 
+  applyOwnGlow(nick, data.account_id);
+
   const content = document.createElement("span");
   content.className = "message";
   content.textContent = data.content;
@@ -121,7 +136,7 @@ function displayMessage(data) {
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Public room selector.
+// Public room selector
 const roomSelector = document.createElement("select");
 
 roomSelector.setAttribute(
@@ -151,8 +166,6 @@ const userNames = document.createElement("div");
 
 userList.replaceChildren(roomSelector, userNames);
 
-// Display the current room without listing private
-// rooms as publicly discoverable rooms.
 function updateRoomSelector() {
   const oldPrivateOption =
     roomSelector.querySelector(
@@ -198,7 +211,8 @@ function renderUsers() {
       if (!people.has(accountId)) {
         people.set(accountId, {
           nickname: String(entry.nickname || "Guest"),
-          color: validColor(entry.nickname_color)
+          color: validColor(entry.nickname_color),
+          accountId
         });
       }
     }
@@ -222,6 +236,8 @@ function renderUsers() {
     name.className = "name";
     name.textContent = person.nickname;
     name.style.color = person.color;
+
+    applyOwnGlow(name, person.accountId);
 
     item.appendChild(name);
     userNames.appendChild(item);
@@ -282,7 +298,7 @@ async function leaveChannel() {
   await supabase.removeChannel(oldChannel);
 }
 
-// Shared room connection for public and private rooms.
+// Public and private room connections
 async function joinRoom(roomName, roomType = "public") {
   if (!supabase || !profile || switching) return false;
 
@@ -303,9 +319,7 @@ async function joinRoom(roomName, roomType = "public") {
   if (roomType === "private") {
     roomName = roomName.trim().toLowerCase();
 
-    if (
-      !/^[a-z0-9_-]{1,32}$/.test(roomName)
-    ) {
+    if (!/^[a-z0-9_-]{1,32}$/.test(roomName)) {
       privateWarning(
         "Private room names must be 1–32 characters: letters, numbers, underscores, or hyphens."
       );
@@ -328,8 +342,6 @@ async function joinRoom(roomName, roomType = "public") {
   const attempt = ++connectionNumber;
 
   try {
-    // Ask the database to join the new room first.
-    // If this fails, we keep the old connection.
     const functionName =
       roomType === "private"
         ? "join_private_chat_room"
@@ -346,10 +358,9 @@ async function joinRoom(roomName, roomType = "public") {
       throw new Error("No room ID returned.");
     }
 
-    // Remove the old Presence connection.
     await leaveChannel();
 
-    // No history is carried between rooms.
+    // Do not load previous messages
     messages.replaceChildren();
 
     currentRoom = null;
@@ -442,7 +453,6 @@ async function joinRoom(roomName, roomType = "public") {
     currentRoomType = roomType;
 
     updateRoomSelector();
-
     setInputReady(true);
 
     setStatus(
@@ -520,8 +530,6 @@ async function joinRoom(roomName, roomType = "public") {
       "Could not join room: " + error.message
     );
 
-    // If the previous channel was already removed,
-    // the page can be refreshed to reconnect.
     if (!channel) {
       currentRoom = null;
       currentRoomId = null;
@@ -541,7 +549,7 @@ async function joinRoom(roomName, roomType = "public") {
   }
 }
 
-// Public room switching.
+// Public room switching
 roomSelector.addEventListener("change", () => {
   if (roomSelector.value === "__private_current__") {
     return;
@@ -550,7 +558,7 @@ roomSelector.addEventListener("change", () => {
   joinRoom(roomSelector.value, "public");
 });
 
-// Nickname commands.
+// Nickname commands
 async function changeNickname(rawNickname) {
   const nickname = rawNickname.trim();
 
@@ -612,7 +620,7 @@ async function changeNickname(rawNickname) {
   );
 }
 
-// Command handler.
+// Command handler
 async function handleCommand(content) {
   const nicknameMatch = content.match(
     /^\/(?:nick|n)(?:\s+(.*))?$/i
@@ -656,7 +664,6 @@ async function sendMessage() {
   busy = true;
 
   try {
-    // Commands are never sent as public messages.
     if (content.startsWith("/")) {
       sendArea.value = "";
       await handleCommand(content);
@@ -759,9 +766,32 @@ async function startChat() {
       throw new Error("Chat profile not found.");
     }
 
+    // Fetch verified owner role from Supabase
+    const { data: glowData, error: glowError } =
+      await supabase.rpc("my_chat_glow_profile");
+
+    if (glowError) throw glowError;
+
+    const glowProfile = getProfile(glowData);
+
+    verifiedOwner = Boolean(
+      glowProfile &&
+      String(glowProfile.account_id) ===
+        String(profile.account_id) &&
+      glowProfile.role === "owner"
+    );
+
+    if (glowProfile) {
+      profile.nickname_color = validColor(
+        glowProfile.nickname_color
+      );
+    }
+
     console.log(
       "[Chat] Logged in as:",
-      profile.nickname
+      profile.nickname,
+      "| Verified owner:",
+      verifiedOwner
     );
 
     await joinRoom("Main Room", "public");
