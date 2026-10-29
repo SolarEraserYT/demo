@@ -1365,3 +1365,60 @@ async function startChat() {
 }
 
 startChat();
+
+// STEP 99 — Connect the existing settings gear
+// to the nickname color picker.
+
+const settingsButtonFix = document.querySelector(
+  ".top_left .gear, " +
+  ".top_left .settings, " +
+  ".top_left button:first-child, " +
+  ".toolbar button:first-child, " +
+  "[title='Settings'], " +
+  "[aria-label='Settings']"
+);
+
+if (settingsButtonFix) {
+  settingsButtonFix.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const picker = document.querySelector(
+      ".solar-color-menu"
+    );
+
+    if (!picker) return;
+
+    if (picker.style.display === "none") {
+      const rect =
+        settingsButtonFix.getBoundingClientRect();
+
+      picker.style.left =
+        Math.max(8, rect.left) + "px";
+
+      picker.style.top =
+        Math.max(8, rect.bottom + 5) + "px";
+
+      picker.style.display = "block";
+
+      colorSelect.value = "new";
+
+      setPickerHex(
+        profile?.nickname_color || "#FFFFFF"
+      );
+
+      updateColorSlotOptions();
+    } else {
+      picker.style.display = "none";
+      closeColorPopup();
+    }
+  });
+
+  console.log(
+    "[Settings] Color picker connected!"
+  );
+} else {
+  console.warn(
+    "[Settings] Could not find settings button."
+  );
+}
