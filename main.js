@@ -1697,3 +1697,40 @@ startChat();
 console.log(
   "[SolarEraser Chat] Step 107 loaded!"
 );
+
+// STEP 108C — Nickname and ID click behavior.
+// Normal click = nickname.
+// Shift-click = account ID.
+
+(function fixUserClicks() {
+  userNames.addEventListener("click", async event => {
+    const name = event.target.closest(
+      ".name[data-account-id]"
+    );
+
+    if (!name || !userNames.contains(name)) {
+      return;
+    }
+
+    event.stopPropagation();
+
+    const value = event.shiftKey
+      ? name.dataset.accountId
+      : name.textContent;
+
+    if (!value) return;
+
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch (error) {
+      console.warn("[Clipboard]", error);
+    }
+
+    sendArea.value = value;
+    sendArea.focus();
+  }, true);
+
+  console.log(
+    "[Users] Nickname/ID click behavior updated!"
+  );
+})();
