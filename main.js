@@ -1,9 +1,16 @@
 
 /*
-  SolarEraser Chat — Step 90
-  Owner glow, private rooms, nickname commands,
-  live messaging, and Realtime Presence.
-  No chat history.
+  SolarEraser Chat — Step 93
+
+  Features:
+  - Public Main Room and Spam
+  - Private rooms: /j and /join
+  - Nicknames: /nick and /n
+  - Verified owner glow
+  - Realtime messages and online users
+  - Server-enforced anti-spam v2
+  - Timestamped yellow cooldown warnings
+  - No chat history
 */
 
 const SUPABASE_URL =
@@ -28,6 +35,7 @@ let currentRoom = null;
 let currentRoomId = null;
 let currentRoomType = null;
 let channel = null;
+
 let switching = false;
 let busy = false;
 let presenceWorking = false;
@@ -46,6 +54,7 @@ function applyOwnGlow(element, accountId) {
     String(accountId) === String(profile?.account_id)
   ) {
     element.classList.add("chat-glow");
+
     element.style.setProperty(
       "--glow-color",
       validColor(profile.nickname_color)
@@ -53,6 +62,7 @@ function applyOwnGlow(element, accountId) {
   }
 }
 
+// Preserve compact chat layout.
 leftPanel.style.display = "none";
 
 layout.style.gridTemplateColumns =
@@ -89,6 +99,11 @@ function setStatus(text, error = false) {
   console.log("[Chat status]", text);
 }
 
+function getProfile(data) {
+  return Array.isArray(data) ? data[0] : data;
+}
+
+// Private notices are never broadcast.
 function privateWarning(text) {
   const notice = document.createElement("div");
 
@@ -100,10 +115,48 @@ function privateWarning(text) {
   messages.scrollTop = messages.scrollHeight;
 }
 
-function getProfile(data) {
-  return Array.isArray(data) ? data[0] : data;
+// EmuChat-style timestamped yellow warning.
+function cooldownWarning(seconds) {
+  const wait = Math.max(
+    1,
+    Math.ceil(Number(seconds) || 1)
+  );
+
+  const line = document.createElement("div");
+
+  line.className = "message_item";
+
+  const time = document.createElement("span");
+  time.className = "time";
+
+  time.textContent = new Date().toLocaleTimeString(
+    "en-GB",
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    }
+  );
+
+  const warning = document.createElement("span");
+
+  warning.className = "message";
+
+  warning.textContent =
+    "You are writing too fast, wait " +
+    wait +
+    " second(s)";
+
+  warning.style.color = "#ffd447";
+
+  line.append(time, warning);
+
+  messages.appendChild(line);
+  messages.scrollTop = messages.scrollHeight;
 }
 
+// Render a live chat message.
 function displayMessage(data) {
   if (!data || typeof data.content !== "string") {
     return;
@@ -117,13 +170,22 @@ function displayMessage(data) {
 
   time.textContent = new Date().toLocaleTimeString(
     [],
-    { hour: "2-digit", minute: "2-digit" }
+    {
+      hour: "2-digit",
+      minute: "2-digit"
+    }
   );
 
   const nick = document.createElement("span");
   nick.className = "nick";
-  nick.textContent = String(data.nickname || "Guest");
-  nick.style.color = validColor(data.nickname_color);
+
+  nick.textContent = String(
+    data.nickname || "Guest"
+  );
+
+  nick.style.color = validColor(
+    data.nickname_color
+  );
 
   applyOwnGlow(nick, data.account_id);
 
@@ -132,11 +194,12 @@ function displayMessage(data) {
   content.textContent = data.content;
 
   line.append(time, nick, content);
+
   messages.appendChild(line);
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Public room selector
+// Public room dropdown.
 const roomSelector = document.createElement("select");
 
 roomSelector.setAttribute(
@@ -157,14 +220,19 @@ roomSelector.style.cssText = [
 
 for (const roomName of PUBLIC_ROOMS) {
   const option = document.createElement("option");
+
   option.value = roomName;
   option.textContent = roomName;
+
   roomSelector.appendChild(option);
 }
 
 const userNames = document.createElement("div");
 
-userList.replaceChildren(roomSelector, userNames);
+userList.replaceChildren(
+  roomSelector,
+  userNames
+);
 
 function updateRoomSelector() {
   const oldPrivateOption =
@@ -180,64 +248,79 @@ function updateRoomSelector() {
     const option = document.createElement("option");
 
     option.value = "__private_current__";
-    option.textContent = "Private: " + currentRoom;
+    option.textContent =
+      "Private: " + currentRoom;
+
     option.dataset.privateRoom = "true";
 
     roomSelector.appendChild(option);
     roomSelector.value = "__private_current__";
+
   } else if (currentRoomType === "public") {
     roomSelector.value = currentRoom;
   }
 }
 
+// Display online users from Realtime Presence.
 function renderUsers() {
   userNames.replaceChildren();
 
-  if (!channel || !presenceWorking) return;
+  if (!channel || !presenceWorking) {
+    return;
+  }
 
   const state = channel.presenceState();
   const people = new Map();
 
-  console.log("[Presence] State:", state);
-
   for (const entries of Object.values(state)) {
-    if (!Array.isArray(entries)) continue;
+    if (!Array.isArray(entries)) {
+      continue;
+    }
 
     for (const entry of entries) {
-      if (!entry || !entry.account_id) continue;
+      if (!entry || !entry.account_id) {
+        continue;
+      }
 
-      const accountId = String(entry.account_id);
+      const accountId = String(
+        entry.account_id
+      );
 
       if (!people.has(accountId)) {
         people.set(accountId, {
-          nickname: String(entry.nickname || "Guest"),
-          color: validColor(entry.nickname_color),
-          accountId
+          accountId,
+          nickname: String(
+            entry.nickname || "Guest"
+          ),
+          color: validColor(
+            entry.nickname_color
+          )
         });
       }
     }
   }
 
-  console.log(
-    "[Presence] Users found:",
-    people.size
-  );
-
   const sorted = [...people.values()].sort(
-    (a, b) => a.nickname.localeCompare(b.nickname)
+    (a, b) =>
+      a.nickname.localeCompare(b.nickname)
   );
 
   for (const person of sorted) {
     const item = document.createElement("div");
+
     item.className = "user_item";
     item.style.padding = "5px 8px";
 
     const name = document.createElement("div");
+
     name.className = "name";
     name.textContent = person.nickname;
     name.style.color = person.color;
 
-    applyOwnGlow(name, person.accountId);
+    applyOwnGlow(
+      name,
+      person.accountId
+    );
 
     item.appendChild(name);
     userNames.appendChild(item);
@@ -257,33 +340,35 @@ async function refreshRealtimeAuth() {
   const { data, error } =
     await supabase.auth.refreshSession();
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
   const session = data.session;
 
   if (!session?.access_token) {
-    throw new Error("Could not refresh login.");
+    throw new Error(
+      "Could not refresh login."
+    );
   }
 
   await supabase.realtime.setAuth(
     session.access_token
   );
 
-  console.log(
-    "[Presence] Authentication refreshed:",
-    Boolean(session.access_token)
-  );
-
   return session;
 }
 
 async function leaveChannel() {
-  if (!channel || !supabase) return;
+  if (!channel || !supabase) {
+    return;
+  }
 
   const oldChannel = channel;
 
   channel = null;
   presenceWorking = false;
+
   userNames.replaceChildren();
 
   try {
@@ -295,12 +380,19 @@ async function leaveChannel() {
     );
   }
 
-  await supabase.removeChannel(oldChannel);
+  await supabase.removeChannel(
+    oldChannel
+  );
 }
 
-// Public and private room connections
-async function joinRoom(roomName, roomType = "public") {
-  if (!supabase || !profile || switching) return false;
+// Connect to a public or private room.
+async function joinRoom(
+  roomName,
+  roomType = "public"
+) {
+  if (!supabase || !profile || switching) {
+    return false;
+  }
 
   if (
     roomType !== "public" &&
@@ -319,10 +411,13 @@ async function joinRoom(roomName, roomType = "public") {
   if (roomType === "private") {
     roomName = roomName.trim().toLowerCase();
 
-    if (!/^[a-z0-9_-]{1,32}$/.test(roomName)) {
+    if (
+      !/^[a-z0-9_-]{1,32}$/.test(roomName)
+    ) {
       privateWarning(
         "Private room names must be 1–32 characters: letters, numbers, underscores, or hyphens."
       );
+
       return false;
     }
   }
@@ -352,15 +447,19 @@ async function joinRoom(roomName, roomType = "public") {
         requested_name: roomName
       });
 
-    if (joinError) throw joinError;
+    if (joinError) {
+      throw joinError;
+    }
 
     if (!roomId) {
-      throw new Error("No room ID returned.");
+      throw new Error(
+        "No room ID returned."
+      );
     }
 
     await leaveChannel();
 
-    // Do not load previous messages
+    // No message history between rooms.
     messages.replaceChildren();
 
     currentRoom = null;
@@ -374,8 +473,12 @@ async function joinRoom(roomName, roomType = "public") {
       {
         config: {
           private: true,
-          broadcast: { self: true },
-          presence: { key: authUserId }
+          broadcast: {
+            self: true
+          },
+          presence: {
+            key: authUserId
+          }
         }
       }
     );
@@ -384,7 +487,10 @@ async function joinRoom(roomName, roomType = "public") {
       "broadcast",
       { event: "chat_message" },
       ({ payload }) => {
-        if (channel !== newChannel) return;
+        if (channel !== newChannel) {
+          return;
+        }
+
         displayMessage(payload);
       }
     );
@@ -393,8 +499,6 @@ async function joinRoom(roomName, roomType = "public") {
       "presence",
       { event: "sync" },
       () => {
-        console.log("[Presence] SYNC");
-
         if (channel === newChannel) {
           renderUsers();
         }
@@ -433,6 +537,7 @@ async function joinRoom(roomName, roomType = "public") {
 
         if (state === "SUBSCRIBED") {
           resolve();
+
         } else if (
           state === "CHANNEL_ERROR" ||
           state === "TIMED_OUT" ||
@@ -440,13 +545,17 @@ async function joinRoom(roomName, roomType = "public") {
         ) {
           reject(
             error ||
-            new Error("Realtime subscription failed")
+            new Error(
+              "Realtime subscription failed"
+            )
           );
         }
       });
     });
 
-    if (attempt !== connectionNumber) return false;
+    if (attempt !== connectionNumber) {
+      return false;
+    }
 
     currentRoom = roomName;
     currentRoomId = roomId;
@@ -457,7 +566,11 @@ async function joinRoom(roomName, roomType = "public") {
 
     setStatus(
       "Connected to " +
-      (roomType === "private" ? "private room " : "") +
+      (
+        roomType === "private"
+          ? "private room "
+          : ""
+      ) +
       roomName
     );
 
@@ -469,12 +582,12 @@ async function joinRoom(roomName, roomType = "public") {
       )
     };
 
-    console.log("[Presence] Attempting track");
-
     let result;
 
     try {
-      result = await newChannel.track(payload);
+      result = await newChannel.track(
+        payload
+      );
     } catch (error) {
       console.error(
         "[Presence] Track exception:",
@@ -493,18 +606,9 @@ async function joinRoom(roomName, roomType = "public") {
       presenceWorking = true;
       renderUsers();
 
-      console.log(
-        "[Presence] SUCCESS — online tracking active"
-      );
     } else {
       presenceWorking = false;
       userNames.replaceChildren();
-
-      console.warn(
-        "[Presence] FAILED — tracking rejected.",
-        "Status:",
-        result
-      );
 
       setStatus(
         "Chat connected; online list unavailable",
@@ -522,12 +626,14 @@ async function joinRoom(roomName, roomType = "public") {
     );
 
     setStatus(
-      "Room connection failed: " + error.message,
+      "Room connection failed: " +
+      error.message,
       true
     );
 
     privateWarning(
-      "Could not join room: " + error.message
+      "Could not join room: " +
+      error.message
     );
 
     if (!channel) {
@@ -549,16 +655,25 @@ async function joinRoom(roomName, roomType = "public") {
   }
 }
 
-// Public room switching
-roomSelector.addEventListener("change", () => {
-  if (roomSelector.value === "__private_current__") {
-    return;
+// Switch public rooms.
+roomSelector.addEventListener(
+  "change",
+  () => {
+    if (
+      roomSelector.value ===
+      "__private_current__"
+    ) {
+      return;
+    }
+
+    joinRoom(
+      roomSelector.value,
+      "public"
+    );
   }
+);
 
-  joinRoom(roomSelector.value, "public");
-});
-
-// Nickname commands
+// Nickname commands.
 async function changeNickname(rawNickname) {
   const nickname = rawNickname.trim();
 
@@ -570,12 +685,15 @@ async function changeNickname(rawNickname) {
     privateWarning(
       "Nicknames must be 1–15 characters: letters, numbers, or underscores."
     );
+
     return;
   }
 
   const { data, error } = await supabase.rpc(
     "change_chat_nickname",
-    { p_nickname: nickname }
+    {
+      p_nickname: nickname
+    }
   );
 
   if (error) {
@@ -584,7 +702,9 @@ async function changeNickname(rawNickname) {
   }
 
   const savedNickname =
-    typeof data === "string" ? data : nickname;
+    typeof data === "string"
+      ? data
+      : nickname;
 
   profile.nickname = savedNickname;
 
@@ -603,6 +723,7 @@ async function changeNickname(rawNickname) {
           "Nickname saved, but the online list may need a reconnect."
         );
       }
+
     } catch (error) {
       console.warn(
         "[Presence] Nickname update warning:",
@@ -616,18 +737,23 @@ async function changeNickname(rawNickname) {
   }
 
   privateWarning(
-    "Your nickname is now " + savedNickname + "."
+    "Your nickname is now " +
+    savedNickname +
+    "."
   );
 }
 
-// Command handler
+// Commands never appear as public messages.
 async function handleCommand(content) {
   const nicknameMatch = content.match(
     /^\/(?:nick|n)(?:\s+(.*))?$/i
   );
 
   if (nicknameMatch) {
-    await changeNickname(nicknameMatch[1] || "");
+    await changeNickname(
+      nicknameMatch[1] || ""
+    );
+
     return;
   }
 
@@ -636,16 +762,23 @@ async function handleCommand(content) {
   );
 
   if (joinMatch) {
-    const requestedRoom = (joinMatch[1] || "").trim();
+    const requestedRoom = (
+      joinMatch[1] || ""
+    ).trim();
 
     if (!requestedRoom) {
       privateWarning(
         "Usage: /j ROOM or /join ROOM"
       );
+
       return;
     }
 
-    await joinRoom(requestedRoom, "private");
+    await joinRoom(
+      requestedRoom,
+      "private"
+    );
+
     return;
   }
 
@@ -654,26 +787,40 @@ async function handleCommand(content) {
   );
 }
 
+// Message sending with the new server cooldown.
 async function sendMessage() {
-  if (busy || switching || !currentRoomId) return;
+  if (
+    busy ||
+    switching ||
+    !currentRoomId
+  ) {
+    return;
+  }
 
   const content = sendArea.value.trim();
 
-  if (!content) return;
+  if (!content) {
+    return;
+  }
 
   busy = true;
 
   try {
     if (content.startsWith("/")) {
       sendArea.value = "";
+
       await handleCommand(content);
       return;
     }
 
-    const { error } = await supabase.rpc(
-      "send_chat_message",
+    // Capture the room in case it changes
+    // while waiting for the server.
+    const roomId = currentRoomId;
+
+    const { data, error } = await supabase.rpc(
+      "send_chat_message_v2",
       {
-        p_room_id: currentRoomId,
+        p_room_id: roomId,
         p_content: content
       }
     );
@@ -683,11 +830,34 @@ async function sendMessage() {
       return;
     }
 
-    sendArea.value = "";
+    if (data?.status === "cooldown") {
+      cooldownWarning(
+        data.wait_seconds
+      );
+
+      // Keep the message in the input so
+      // the user can retry after cooldown.
+      return;
+    }
+
+    if (data?.status === "sent") {
+      // Don't erase text typed while the
+      // server request was in progress.
+      if (sendArea.value.trim() === content) {
+        sendArea.value = "";
+      }
+
+      return;
+    }
+
+    privateWarning(
+      "Unexpected message response."
+    );
 
   } catch (error) {
     privateWarning(
-      "Could not send message: " + error.message
+      "Could not send message: " +
+      error.message
     );
 
   } finally {
@@ -699,18 +869,27 @@ async function sendMessage() {
   }
 }
 
-sendButton.addEventListener("click", sendMessage);
+sendButton.addEventListener(
+  "click",
+  sendMessage
+);
 
-sendArea.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    sendMessage();
+sendArea.addEventListener(
+  "keydown",
+  (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendMessage();
+    }
   }
-});
+);
 
+// Anonymous login and startup.
 async function startChat() {
   try {
-    setStatus("Connecting to Supabase...");
+    setStatus(
+      "Connecting to Supabase..."
+    );
 
     const { createClient } = await import(
       "https://esm.sh/@supabase/supabase-js@2"
@@ -733,13 +912,17 @@ async function startChat() {
       error: sessionError
     } = await supabase.auth.getSession();
 
-    if (sessionError) throw sessionError;
+    if (sessionError) {
+      throw sessionError;
+    }
 
     if (!session) {
       const { error: authError } =
         await supabase.auth.signInAnonymously();
 
-      if (authError) throw authError;
+      if (authError) {
+        throw authError;
+      }
     }
 
     const {
@@ -747,32 +930,53 @@ async function startChat() {
       error: userError
     } = await supabase.auth.getUser();
 
-    if (userError) throw userError;
+    if (userError) {
+      throw userError;
+    }
 
     if (!user) {
-      throw new Error("Guest login failed.");
+      throw new Error(
+        "Guest login failed."
+      );
     }
 
     authUserId = user.id;
 
     const { data, error: profileError } =
-      await supabase.rpc("my_chat_profile");
+      await supabase.rpc(
+        "my_chat_profile"
+      );
 
-    if (profileError) throw profileError;
+    if (profileError) {
+      throw profileError;
+    }
 
     profile = getProfile(data);
 
-    if (!profile?.nickname || !profile?.account_id) {
-      throw new Error("Chat profile not found.");
+    if (
+      !profile?.nickname ||
+      !profile?.account_id
+    ) {
+      throw new Error(
+        "Chat profile not found."
+      );
     }
 
-    // Fetch verified owner role from Supabase
-    const { data: glowData, error: glowError } =
-      await supabase.rpc("my_chat_glow_profile");
+    // Verify owner role with the database.
+    const {
+      data: glowData,
+      error: glowError
+    } = await supabase.rpc(
+      "my_chat_glow_profile"
+    );
 
-    if (glowError) throw glowError;
+    if (glowError) {
+      throw glowError;
+    }
 
-    const glowProfile = getProfile(glowData);
+    const glowProfile = getProfile(
+      glowData
+    );
 
     verifiedOwner = Boolean(
       glowProfile &&
@@ -794,13 +998,20 @@ async function startChat() {
       verifiedOwner
     );
 
-    await joinRoom("Main Room", "public");
+    await joinRoom(
+      "Main Room",
+      "public"
+    );
 
   } catch (error) {
-    console.error("[Chat] Startup failed:", error);
+    console.error(
+      "[Chat] Startup failed:",
+      error
+    );
 
     setStatus(
-      "Startup failed: " + error.message,
+      "Startup failed: " +
+      error.message,
       true
     );
   }
