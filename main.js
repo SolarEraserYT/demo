@@ -1,14 +1,17 @@
 
 /*
-  SolarEraser Chat — Step 97
+  SolarEraser Chat — Step 107
 
-  - Public and private rooms
-  - /nick, /n, /j, /join
-  - Verified owner glow
-  - Realtime Presence
-  - Anti-spam v2 and cooldown warnings
-  - EmuChat-style nickname color picker
-  - No chat history
+  Public rooms: Main Room, Spam
+  Private rooms: /j, /join
+  Nicknames: /nick, /n
+  Room glow: /g, /glow
+  Click usernames to insert account IDs
+  Shift-click usernames to copy IDs
+  Server-verified owner and room glow
+  Nickname color picker with 3 saved slots
+  Server-side cooldowns and anti-spam
+  No chat history
 */
 
 const SUPABASE_URL =
@@ -25,6 +28,7 @@ const leftPanel = document.querySelector(".left");
 const layout = document.querySelector(".container");
 
 const PUBLIC_ROOMS = ["Main Room", "Spam"];
+const SLOT_STORAGE_KEY = "solareraser_chat_colors_v1";
 
 let supabase = null;
 let profile = null;
@@ -40,61 +44,31 @@ let presenceWorking = false;
 let connectionNumber = 0;
 let verifiedOwner = false;
 
-const SLOT_STORAGE_KEY = "solareraser_chat_colors_v1";
+const verifiedRoomGlows = new Map();
+let glowRoomId = null;
+let glowRequestRunning = false;
+let glowRefreshTimer = null;
 
 function validColor(value) {
-  return /^#[0-9a-f]{6}$/i.test(value || "")
-    ? value.toUpperCase()
-    : "#FFFFFF";
-}
+  if (typeof value !== "string") return "#FFFFFF";
 
-function applyOwnGlow(element, accountId) {
-  if (
-    verifiedOwner &&
-    String(accountId) === String(profile?.account_id)
-  ) {
-    element.classList.add("chat-glow");
-    element.style.setProperty(
-      "--glow-color",
-      validColor(profile.nickname_color)
-    );
+  if (/^#[0-9a-f]{6}$/i.test(value)) {
+    return value.toUpperCase();
   }
-}
 
-leftPanel.style.display = "none";
+  const rgb = value.match(
+    /^rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)/
+  );
 
-layout.style.gridTemplateColumns =
-  "minmax(0, 1fr) minmax(150px, 210px)";
+  if (rgb) {
+    return "#" + rgb.slice(1, 4).map(value =>
+      Math.min(255, Number(value))
+        .toString(16)
+        .padStart(2, "0")
+    ).join("").toUpperCase();
+  }
 
-layout.style.gridTemplateAreas = '"center right"';
-
-sendArea.disabled = true;
-sendButton.disabled = true;
-sendArea.placeholder = "Connecting...";
-
-const statusBar = document.createElement("div");
-
-statusBar.style.cssText = [
-  "position:fixed",
-  "bottom:61px",
-  "left:10px",
-  "z-index:20",
-  "pointer-events:none",
-  "font-size:12px",
-  "color:#aaa8ca",
-  "background:#171a24",
-  "padding:3px 8px",
-  "border-radius:5px"
-].join(";");
-
-document.body.appendChild(statusBar);
-
-function setStatus(text, error = false) {
-  statusBar.textContent = text;
-  statusBar.style.color =
-    error ? "#ff9393" : "#aaa8ca";
-
-  console.log("[Chat status]", text);
+  return "#FFFFFF";
 }
 
 function getProfile(data) {
@@ -136,8 +110,7 @@ function cooldownWarning(seconds) {
   warning.className = "message";
   warning.textContent =
     "You are writing too fast, wait " +
-    wait +
-    " second(s)";
+    wait + " second(s)";
   warning.style.color = "#ffd447";
 
   line.append(time, warning);
@@ -145,25 +118,187 @@ function cooldownWarning(seconds) {
   messages.scrollTop = messages.scrollHeight;
 }
 
+leftPanel.style.display = "none";
+
+layout.style.gridTemplateColumns =
+  "minmax(0, 1fr) minmax(150px, 210px)";
+
+layout.style.gridTemplateAreas = '"center right"';
+
+sendArea.disabled = true;
+sendButton.disabled = true;
+sendArea.placeholder = "Connecting...";
+
+const statusBar = document.createElement("div");
+
+statusBar.style.cssText = [
+  "position:fixed",
+  "bottom:61px",
+  "left:10px",
+  "z-index:20",
+  "pointer-events:none",
+  "font-size:12px",
+  "color:#aaa8ca",
+  "background:#171a24",
+  "padding:3px 8px",
+  "border-radius:5px"
+].join(";");
+
+document.body.appendChild(statusBar);
+
+function setStatus(text, error = false) {
+  statusBar.textContent = text;
+  statusBar.style.color =
+    error ? "#ff9393" : "#aaa8ca";
+
+  console.log("[Chat status]", text);
+}
+
+// --------------------------------------------------
+// VERIFIED GLOW
+// --------------------------------------------------
+
+function applyGlow(element, accountId, color) {
+  const id = String(accountId || "");
+  const hex = validColor(color);
+
+  element.dataset.accountId = id;
+  element.style.color = hex;
+
+  const hasGlow =
+    glowRoomId === String(currentRoomId) &&
+    verifiedRoomGlows.get(id) === true;
+
+  element.classList.toggle("chat-glow", hasGlow);
+
+  if (hasGlow) {
+    element.style.setProperty("--glow-color", hex);
+  } else {
+    element.style.removeProperty("--glow-color");
+  }
+}
+
+function repaintVerifiedGlows() {
+  const elements = document.querySelectorAll(
+    ".right .name[data-account-id], " +
+    ".messages .nick[data-account-id]"
+  );
+
+  for (const element of elements) {
+    const id = element.dataset.accountId;
+
+    const hasGlow =
+      glowRoomId === String(currentRoomId) &&
+      verifiedRoomGlows.get(id) === true;
+
+    element.classList.toggle("chat-glow", hasGlow);
+
+    if (hasGlow) {
+      element.style.setProperty(
+        "--glow-color",
+        validColor(element.style.color)
+      );
+    } else {
+      element.style.removeProperty("--glow-color");
+    }
+  }
+}
+
+async function refreshVerifiedGlows() {
+  if (
+    !supabase ||
+    !currentRoomId ||
+    !channel ||
+    glowRequestRunning
+  ) return;
+
+  const requestedRoom = String(currentRoomId);
+  glowRequestRunning = true;
+
+  try {
+    const { data, error } = await supabase.rpc(
+      "get_chat_room_glow",
+      { p_room_id: requestedRoom }
+    );
+
+    if (error) throw error;
+
+    if (String(currentRoomId) !== requestedRoom) {
+      return;
+    }
+
+    verifiedRoomGlows.clear();
+
+    for (const person of data || []) {
+      verifiedRoomGlows.set(
+        String(person.account_id),
+        person.has_glow === true
+      );
+    }
+
+    glowRoomId = requestedRoom;
+    repaintVerifiedGlows();
+
+  } catch (error) {
+    console.warn(
+      "[Glow] Refresh failed:",
+      error.message
+    );
+
+  } finally {
+    glowRequestRunning = false;
+
+    if (
+      currentRoomId &&
+      String(currentRoomId) !== requestedRoom
+    ) {
+      scheduleGlowRefresh();
+    }
+  }
+}
+
+function scheduleGlowRefresh() {
+  clearTimeout(glowRefreshTimer);
+
+  glowRefreshTimer = setTimeout(
+    refreshVerifiedGlows,
+    250
+  );
+}
+
+// --------------------------------------------------
+// MESSAGES
+// --------------------------------------------------
+
 function displayMessage(data) {
-  if (!data || typeof data.content !== "string") return;
+  if (
+    !data ||
+    typeof data.content !== "string"
+  ) return;
 
   const line = document.createElement("div");
   line.className = "message_item";
 
   const time = document.createElement("span");
   time.className = "time";
+
   time.textContent = new Date().toLocaleTimeString(
     [],
-    { hour: "2-digit", minute: "2-digit" }
+    {
+      hour: "2-digit",
+      minute: "2-digit"
+    }
   );
 
   const nick = document.createElement("span");
   nick.className = "nick";
   nick.textContent = String(data.nickname || "Guest");
-  nick.style.color = validColor(data.nickname_color);
 
-  applyOwnGlow(nick, data.account_id);
+  applyGlow(
+    nick,
+    data.account_id,
+    data.nickname_color
+  );
 
   const content = document.createElement("span");
   content.className = "message";
@@ -172,11 +307,21 @@ function displayMessage(data) {
   line.append(time, nick, content);
   messages.appendChild(line);
   messages.scrollTop = messages.scrollHeight;
+
+  if (
+    data.account_id &&
+    !verifiedRoomGlows.has(String(data.account_id))
+  ) {
+    scheduleGlowRefresh();
+  }
 }
 
+// --------------------------------------------------
 // PUBLIC ROOM SELECTOR
+// --------------------------------------------------
 
 const roomSelector = document.createElement("select");
+
 roomSelector.setAttribute(
   "aria-label",
   "Choose public room"
@@ -219,10 +364,15 @@ function updateRoomSelector() {
 
     roomSelector.appendChild(option);
     roomSelector.value = "__private_current__";
+
   } else if (currentRoomType === "public") {
     roomSelector.value = currentRoom;
   }
 }
+
+// --------------------------------------------------
+// ONLINE USERS AND CLICKABLE IDS
+// --------------------------------------------------
 
 function renderUsers() {
   userNames.replaceChildren();
@@ -262,14 +412,50 @@ function renderUsers() {
     const name = document.createElement("div");
     name.className = "name";
     name.textContent = person.nickname;
-    name.style.color = person.color;
 
-    applyOwnGlow(name, person.accountId);
+    applyGlow(
+      name,
+      person.accountId,
+      person.color
+    );
+
+    // Click = insert ID and copy it.
+    // Shift-click = copy ID only.
+    name.style.cursor = "pointer";
+    name.title =
+      "Click to insert ID; Shift-click to copy ID";
+
+    name.addEventListener("click", async event => {
+      const id = person.accountId;
+
+      try {
+        await navigator.clipboard.writeText(id);
+      } catch (error) {
+        console.warn("[Clipboard]", error);
+      }
+
+      if (!event.shiftKey) {
+        const existing = sendArea.value.trim();
+
+        sendArea.value = existing
+          ? existing + " " + id
+          : id;
+
+        sendArea.focus();
+      }
+    });
 
     item.appendChild(name);
     userNames.appendChild(item);
   }
+
+  repaintVerifiedGlows();
+  scheduleGlowRefresh();
 }
+
+// --------------------------------------------------
+// SUPABASE CONNECTION
+// --------------------------------------------------
 
 function setInputReady(ready) {
   sendArea.disabled = !ready;
@@ -301,6 +487,7 @@ async function leaveChannel() {
   if (!channel || !supabase) return;
 
   const oldChannel = channel;
+
   channel = null;
   presenceWorking = false;
   userNames.replaceChildren();
@@ -324,8 +511,14 @@ async function trackMyPresence() {
   });
 }
 
+// --------------------------------------------------
+// JOIN ROOMS
+// --------------------------------------------------
+
 async function joinRoom(roomName, roomType = "public") {
-  if (!supabase || !profile || switching) return false;
+  if (!supabase || !profile || switching) {
+    return false;
+  }
 
   if (
     roomType !== "public" &&
@@ -342,7 +535,8 @@ async function joinRoom(roomName, roomType = "public") {
 
     if (!/^[a-z0-9_-]{1,32}$/.test(roomName)) {
       privateWarning(
-        "Private room names must be 1–32 characters: letters, numbers, underscores, or hyphens."
+        "Private room names must be 1–32 characters: " +
+        "letters, numbers, underscores, or hyphens."
       );
       return false;
     }
@@ -374,7 +568,9 @@ async function joinRoom(roomName, roomType = "public") {
       });
 
     if (joinError) throw joinError;
-    if (!roomId) throw new Error("No room ID returned.");
+    if (!roomId) {
+      throw new Error("No room ID returned.");
+    }
 
     await leaveChannel();
     messages.replaceChildren();
@@ -382,6 +578,9 @@ async function joinRoom(roomName, roomType = "public") {
     currentRoom = null;
     currentRoomId = null;
     currentRoomType = null;
+
+    glowRoomId = null;
+    verifiedRoomGlows.clear();
 
     await refreshRealtimeAuth();
 
@@ -410,7 +609,9 @@ async function joinRoom(roomName, roomType = "public") {
         "presence",
         { event },
         () => {
-          if (channel === newChannel) renderUsers();
+          if (channel === newChannel) {
+            renderUsers();
+          }
         }
       );
     }
@@ -421,6 +622,7 @@ async function joinRoom(roomName, roomType = "public") {
       newChannel.subscribe((state, error) => {
         if (state === "SUBSCRIBED") {
           resolve();
+
         } else if (
           state === "CHANNEL_ERROR" ||
           state === "TIMED_OUT" ||
@@ -434,7 +636,9 @@ async function joinRoom(roomName, roomType = "public") {
       });
     });
 
-    if (attempt !== connectionNumber) return false;
+    if (attempt !== connectionNumber) {
+      return false;
+    }
 
     currentRoom = roomName;
     currentRoomId = roomId;
@@ -460,9 +664,12 @@ async function joinRoom(roomName, roomType = "public") {
     if (result === "ok") {
       presenceWorking = true;
       renderUsers();
+      scheduleGlowRefresh();
+
     } else {
       presenceWorking = false;
       userNames.replaceChildren();
+
       setStatus(
         "Chat connected; online list unavailable",
         true
@@ -507,17 +714,15 @@ roomSelector.addEventListener("change", () => {
   joinRoom(roomSelector.value, "public");
 });
 
+// --------------------------------------------------
+// NICKNAME COMMANDS
+// --------------------------------------------------
+
 async function changeNickname(rawNickname) {
   const nickname = rawNickname.trim();
 
-  if (
-    !nickname ||
-    nickname.length > 15 ||
-    !/^[A-Za-z0-9_]+$/.test(nickname)
-  ) {
-    privateWarning(
-      "Nicknames must be 1–15 characters: letters, numbers, or underscores."
-    );
+  if (!nickname) {
+    privateWarning("Usage: /nick YOUR NAME");
     return;
   }
 
@@ -536,16 +741,73 @@ async function changeNickname(rawNickname) {
 
   if (channel && presenceWorking) {
     try {
-      await trackMyPresence();
+      const result = await trackMyPresence();
+
+      if (result !== "ok") {
+        privateWarning(
+          "Nickname saved, but the online list " +
+          "may need a reconnect."
+        );
+      }
+
     } catch (error) {
-      console.warn("[Presence] Nickname update:", error);
+      console.warn(
+        "[Presence] Nickname update:",
+        error
+      );
     }
   }
+
+  renderUsers();
 
   privateWarning(
     "Your nickname is now " + profile.nickname + "."
   );
 }
+
+// --------------------------------------------------
+// /G AND /GLOW COMMANDS
+// --------------------------------------------------
+
+async function grantRoomGlow(targetId) {
+  if (!currentRoomId || !supabase) {
+    privateWarning("You are not connected to a room.");
+    return;
+  }
+
+  const validId =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  if (!validId.test(targetId)) {
+    privateWarning("Usage: /g USER_ID");
+    return;
+  }
+
+  const roomId = currentRoomId;
+
+  const { data, error } = await supabase.rpc(
+    "grant_chat_room_glow",
+    {
+      p_room_id: roomId,
+      p_target_account_id: targetId
+    }
+  );
+
+  if (error) {
+    privateWarning(error.message);
+    return;
+  }
+
+  privateWarning(data || "Glow granted.");
+
+  if (currentRoomId === roomId) {
+    await refreshVerifiedGlows();
+  }
+}
+
+// --------------------------------------------------
+// COMMAND HANDLER
+// --------------------------------------------------
 
 async function handleCommand(content) {
   const nicknameMatch = content.match(
@@ -562,7 +824,8 @@ async function handleCommand(content) {
   );
 
   if (joinMatch) {
-    const requestedRoom = (joinMatch[1] || "").trim();
+    const requestedRoom =
+      (joinMatch[1] || "").trim();
 
     if (!requestedRoom) {
       privateWarning("Usage: /j ROOM or /join ROOM");
@@ -573,10 +836,26 @@ async function handleCommand(content) {
     return;
   }
 
+  const glowMatch = content.match(
+    /^\/(?:g|glow)(?:\s+(.*))?$/i
+  );
+
+  if (glowMatch) {
+    await grantRoomGlow(
+      (glowMatch[1] || "").trim()
+    );
+    return;
+  }
+
   privateWarning(
-    "Unknown command. Available: /nick, /n, /j, /join."
+    "Unknown command. Available: " +
+    "/nick, /n, /j, /join, /g, /glow."
   );
 }
+
+// --------------------------------------------------
+// SEND MESSAGES
+// --------------------------------------------------
 
 async function sendMessage() {
   if (busy || switching || !currentRoomId) return;
@@ -627,22 +906,28 @@ async function sendMessage() {
 
   } finally {
     busy = false;
-    if (!sendArea.disabled) sendArea.focus();
+
+    if (!sendArea.disabled) {
+      sendArea.focus();
+    }
   }
 }
 
 sendButton.addEventListener("click", sendMessage);
 
-sendArea.addEventListener("keydown", (event) => {
+sendArea.addEventListener("keydown", event => {
   if (event.key === "Enter") {
     event.preventDefault();
     sendMessage();
   }
 });
 
-// EMUCHAT-STYLE COLOR PICKER
+// --------------------------------------------------
+// NICKNAME COLOR PICKER
+// --------------------------------------------------
 
 const pickerStyle = document.createElement("style");
+
 pickerStyle.textContent = `
   .solar-color-menu {
     position: fixed;
@@ -654,6 +939,7 @@ pickerStyle.textContent = `
     box-shadow: 0 5px 18px #0009;
     color: #eee;
     font: 12px Arial, sans-serif;
+    overflow: visible;
   }
 
   .solar-color-menu button,
@@ -677,6 +963,11 @@ pickerStyle.textContent = `
     height: 17px;
     border: 1px solid #999;
     flex: none;
+    cursor: pointer;
+  }
+
+  .solar-color-preview:hover {
+    outline: 1px solid #aaa;
   }
 
   .solar-color-select {
@@ -691,7 +982,9 @@ pickerStyle.textContent = `
   .solar-color-popup {
     position: absolute;
     left: 0;
-    bottom: calc(100% + 4px);
+    top: calc(100% + 4px);
+    bottom: auto;
+    z-index: 10001;
     padding: 9px;
     background: #292929;
     border: 1px solid #666;
@@ -791,6 +1084,7 @@ pickerStyle.textContent = `
     font-size: 11px;
   }
 `;
+
 document.head.appendChild(pickerStyle);
 
 const colorMenu = document.createElement("div");
@@ -823,7 +1117,8 @@ colorRow.append(colorPreview, colorSelect);
 const openColorButton = document.createElement("button");
 openColorButton.textContent = "choose";
 openColorButton.style.cssText =
-  "background:#414141;color:#fff;border:1px solid #666;padding:4px 8px;";
+  "background:#414141;color:#fff;" +
+  "border:1px solid #666;padding:4px 8px;";
 
 const colorPopup = document.createElement("div");
 colorPopup.className = "solar-color-popup";
@@ -888,6 +1183,7 @@ let selectedHex = "#FFFFFF";
 function hsvToHex(h, s, v) {
   const f = n => {
     const k = (n + h / 60) % 6;
+
     return v - v * s *
       Math.max(Math.min(k, 4 - k, 1), 0);
   };
@@ -914,11 +1210,16 @@ function hexToHsv(hex) {
   let h = 0;
 
   if (d !== 0) {
-    if (max === r) h = ((g - b) / d) % 6;
-    else if (max === g) h = (b - r) / d + 2;
-    else h = (r - g) / d + 4;
+    if (max === r) {
+      h = ((g - b) / d) % 6;
+    } else if (max === g) {
+      h = (b - r) / d + 2;
+    } else {
+      h = (r - g) / d + 4;
+    }
 
     h *= 60;
+
     if (h < 0) h += 360;
   }
 
@@ -957,9 +1258,11 @@ function updateColorPicker() {
 
 function setPickerHex(hex) {
   const hsv = hexToHsv(validColor(hex));
+
   colorHue = hsv.h;
   colorSat = hsv.s;
   colorValue = hsv.v;
+
   updateColorPicker();
 }
 
@@ -969,8 +1272,10 @@ function readColorSlots() {
       localStorage.getItem(SLOT_STORAGE_KEY) || "{}"
     );
 
-    return value &&
-      typeof value === "object" ? value : {};
+    return value && typeof value === "object"
+      ? value
+      : {};
+
   } catch {
     return {};
   }
@@ -1006,20 +1311,6 @@ function updateColorSlotOptions() {
   }
 }
 
-function positionColorMenu() {
-  const gear = document.querySelector(".settings");
-
-  if (!gear) return;
-
-  const rect = gear.getBoundingClientRect();
-
-  colorMenu.style.left =
-    Math.max(8, rect.left) + "px";
-
-  colorMenu.style.top =
-    Math.max(8, rect.bottom + 5) + "px";
-}
-
 async function saveNicknameColor(hex) {
   if (!supabase || !profile) {
     throw new Error("Chat is still connecting.");
@@ -1039,26 +1330,25 @@ async function saveNicknameColor(hex) {
 
     if (result !== "ok") {
       privateWarning(
-        "Color saved, but the online list may need a reconnect."
+        "Color saved, but the online list " +
+        "may need a reconnect."
       );
     }
   }
 
   renderUsers();
 
-  // Update the glow/color of messages already visible
-  // from this account.
-  for (const line of messages.querySelectorAll(
-    ".message_item"
+  // Update messages belonging to this account.
+  for (const nick of messages.querySelectorAll(
+    ".message_item .nick[data-account-id]"
   )) {
-    const nick = line.querySelector(".nick");
-    if (!nick) continue;
-
-    if (nick.textContent === profile.nickname) {
+    if (
+      nick.dataset.accountId ===
+      String(profile.account_id)
+    ) {
       nick.style.color = profile.nickname_color;
 
-      if (verifiedOwner) {
-        nick.classList.add("chat-glow");
+      if (nick.classList.contains("chat-glow")) {
         nick.style.setProperty(
           "--glow-color",
           profile.nickname_color
@@ -1082,12 +1372,23 @@ function closeColorPopup() {
   colorPopup.classList.remove("open");
 }
 
-openColorButton.addEventListener("click", () => {
+function toggleColorPopup() {
   if (colorPopup.classList.contains("open")) {
     closeColorPopup();
   } else {
     openColorPopup();
   }
+}
+
+openColorButton.addEventListener(
+  "click",
+  toggleColorPopup
+);
+
+colorPreview.addEventListener("click", event => {
+  event.preventDefault();
+  event.stopPropagation();
+  toggleColorPopup();
 });
 
 cancelColorButton.addEventListener("click", () => {
@@ -1102,17 +1403,11 @@ function chooseFromColorSelect() {
     setPickerHex(
       profile?.nickname_color || "#FFFFFF"
     );
-    openColorPopup();
-    return;
-  }
-
-  const slotColor = slots[choice];
-
-  if (slotColor) {
-    setPickerHex(slotColor);
   } else {
     setPickerHex(
-      profile?.nickname_color || "#FFFFFF"
+      slots[choice] ||
+      profile?.nickname_color ||
+      "#FFFFFF"
     );
   }
 
@@ -1137,12 +1432,14 @@ chooseColorButton.addEventListener(
       if (colorSelect.value === "new") {
         const slots = readColorSlots();
 
-        const freeSlot = ["slot1", "slot2", "slot3"]
-          .find(slot => !slots[slot]);
+        const freeSlot =
+          ["slot1", "slot2", "slot3"]
+            .find(slot => !slots[slot]);
 
         if (freeSlot) {
           saveColorSlot(freeSlot, color);
         }
+
       } else {
         saveColorSlot(
           colorSelect.value,
@@ -1152,8 +1449,10 @@ chooseColorButton.addEventListener(
 
       updateColorSlotOptions();
       closeColorPopup();
+
     } catch (error) {
       colorError.textContent = error.message;
+
     } finally {
       chooseColorButton.disabled = false;
     }
@@ -1213,38 +1512,55 @@ attachColorPointer(hueBar, event => {
     359.99,
     Math.max(
       0,
-      (event.clientY - rect.top) / rect.height * 360
+      (event.clientY - rect.top) /
+        rect.height * 360
     )
   );
 
   updateColorPicker();
 });
 
-// Use the existing settings gear.
-// This avoids replacing the user's settings layout.
-const settingsGear =
-  document.querySelector(".settings");
+// --------------------------------------------------
+// SETTINGS GEAR
+// --------------------------------------------------
+
+const settingsGear = document.querySelector(
+  '.menu_button[data-target="settings"]'
+);
+
+function positionColorMenu() {
+  if (!settingsGear) return;
+
+  const rect = settingsGear.getBoundingClientRect();
+
+  colorMenu.style.left =
+    Math.max(8, rect.left) + "px";
+
+  colorMenu.style.top =
+    Math.max(8, rect.bottom + 5) + "px";
+}
 
 if (settingsGear) {
   settingsGear.addEventListener("click", event => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (colorMenu.style.display === "none") {
-      positionColorMenu();
-      updateColorSlotOptions();
-
-      colorSelect.value = "new";
-
-      setPickerHex(
-        profile?.nickname_color || "#FFFFFF"
-      );
-
-      colorMenu.style.display = "block";
-    } else {
+    if (colorMenu.style.display !== "none") {
       colorMenu.style.display = "none";
       closeColorPopup();
+      return;
     }
+
+    positionColorMenu();
+    updateColorSlotOptions();
+
+    colorSelect.value = "new";
+
+    setPickerHex(
+      profile?.nickname_color || "#FFFFFF"
+    );
+
+    colorMenu.style.display = "block";
   });
 }
 
@@ -1264,7 +1580,9 @@ window.addEventListener("resize", () => {
   }
 });
 
+// --------------------------------------------------
 // START CHAT
+// --------------------------------------------------
 
 async function startChat() {
   try {
@@ -1306,7 +1624,10 @@ async function startChat() {
     } = await supabase.auth.getUser();
 
     if (userError) throw userError;
-    if (!user) throw new Error("Guest login failed.");
+
+    if (!user) {
+      throw new Error("Guest login failed.");
+    }
 
     authUserId = user.id;
 
@@ -1364,408 +1685,15 @@ async function startChat() {
   }
 }
 
-startChat();
-
-// STEP 99 — Connect the existing settings gear
-// to the nickname color picker.
-
-const settingsButtonFix = document.querySelector(
-  ".top_left .gear, " +
-  ".top_left .settings, " +
-  ".top_left button:first-child, " +
-  ".toolbar button:first-child, " +
-  "[title='Settings'], " +
-  "[aria-label='Settings']"
-);
-
-if (settingsButtonFix) {
-  settingsButtonFix.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const picker = document.querySelector(
-      ".solar-color-menu"
-    );
-
-    if (!picker) return;
-
-    if (picker.style.display === "none") {
-      const rect =
-        settingsButtonFix.getBoundingClientRect();
-
-      picker.style.left =
-        Math.max(8, rect.left) + "px";
-
-      picker.style.top =
-        Math.max(8, rect.bottom + 5) + "px";
-
-      picker.style.display = "block";
-
-      colorSelect.value = "new";
-
-      setPickerHex(
-        profile?.nickname_color || "#FFFFFF"
-      );
-
-      updateColorSlotOptions();
-    } else {
-      picker.style.display = "none";
-      closeColorPopup();
-    }
-  });
-
-  console.log(
-    "[Settings] Color picker connected!"
-  );
-} else {
-  console.warn(
-    "[Settings] Could not find settings button."
-  );
-}
-
-/*
-  STEP 99 — Fix settings gear using its
-  actual selector from index.html.
-*/
-
-const realSettingsGear = document.querySelector(
-  '.menu_button[data-target="settings"]'
-);
-
-if (realSettingsGear) {
-  realSettingsGear.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    // Toggle the existing color picker.
-    const isOpen = colorMenu.style.display !== "none";
-
-    if (isOpen) {
-      colorMenu.style.display = "none";
-      closeColorPopup();
-      return;
-    }
-
-    const rect = realSettingsGear.getBoundingClientRect();
-
-    colorMenu.style.left = Math.max(8, rect.left) + "px";
-    colorMenu.style.top = Math.max(8, rect.bottom + 5) + "px";
-
-    colorSelect.value = "new";
-
-    setPickerHex(
-      profile?.nickname_color || "#FFFFFF"
-    );
-
-    updateColorSlotOptions();
-
-    colorMenu.style.display = "block";
-  });
-
-  console.log(
-    "[Settings] Real settings gear connected!"
-  );
-}
-
-// STEP 100 — Fix EmuChat color picker positioning
-// and make the color preview square clickable.
-
-(function fixColorPicker() {
-  // Override the old upward-opening popup style.
-  const fixStyle = document.createElement("style");
-
-  fixStyle.textContent = `
-    .solar-color-menu {
-      overflow: visible !important;
-    }
-
-    .solar-color-popup {
-      top: calc(100% + 4px) !important;
-      bottom: auto !important;
-      left: 0 !important;
-      z-index: 10001 !important;
-    }
-
-    .solar-color-preview {
-      cursor: pointer !important;
-    }
-
-    .solar-color-preview:hover {
-      outline: 1px solid #aaa;
-    }
-  `;
-
-  document.head.appendChild(fixStyle);
-
-  // Clicking the colored square opens the picker.
-  colorPreview.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (colorPopup.classList.contains("open")) {
-      closeColorPopup();
-    } else {
-      setPickerHex(
-        profile?.nickname_color || "#FFFFFF"
-      );
-
-      openColorPopup();
-    }
-  });
-
-  console.log(
-    "[Colors] Popup positioning and preview fixed!"
-  );
-})();
-
-// STEP 102 — Updated nickname commands
-// Supports spaces, emojis, and owner/admin exceptions.
-// Supabase validates the actual nickname rules.
-
-async function changeNickname(rawNickname) {
-  const nickname = rawNickname.trim();
-
-  if (!nickname) {
-    privateWarning("Usage: /nick YOUR NAME");
-    return;
-  }
-
-  const { data, error } = await supabase.rpc(
-    "change_chat_nickname",
-    { p_nickname: nickname }
-  );
-
-  if (error) {
-    privateWarning(error.message);
-    return;
-  }
-
-  profile.nickname =
-    typeof data === "string" ? data : nickname;
-
-  if (channel && presenceWorking) {
-    try {
-      const result = await trackMyPresence();
-
-      if (result !== "ok") {
-        privateWarning(
-          "Nickname saved, but the online list may need a reconnect."
-        );
-      }
-    } catch (error) {
-      console.warn(
-        "[Presence] Nickname update:",
-        error
-      );
-    }
-  }
-
-  renderUsers();
-
-  privateWarning(
-    "Your nickname is now " + profile.nickname + "."
-  );
-}
-
-// STEP 104 — Everyone can see verified glows.
-// Owner/admin/manager: glow in every room.
-// Private room owner / granted glow: room-specific.
-// Spam: everyone glows.
-// Permissions come from Supabase, never from user Presence.
-
-const verifiedRoomGlows = new Map();
-let glowRoomId = null;
-let glowRequestRunning = false;
-let glowRefreshTimer = null;
-
-function repaintVerifiedGlows() {
-  const elements = document.querySelectorAll(
-    ".right .name[data-account-id], " +
-    ".messages .nick[data-account-id]"
-  );
-
-  for (const element of elements) {
-    const id = element.dataset.accountId;
-    const hasGlow = verifiedRoomGlows.get(id) === true;
-
-    element.classList.toggle("chat-glow", hasGlow);
-
-    if (hasGlow) {
-      const color = validColor(
-        element.style.color ||
-        (
-          id === String(profile?.account_id)
-            ? profile.nickname_color
-            : "#FFFFFF"
-        )
-      );
-
-      // style.color may be an RGB string.
-      // Convert it to a valid hex color when needed.
-      let glowColor = color;
-
-      if (
-        color === "#FFFFFF" &&
-        element.style.color.startsWith("rgb")
-      ) {
-        const numbers =
-          element.style.color.match(/\d+/g);
-
-        if (numbers && numbers.length >= 3) {
-          glowColor = "#" + numbers
-            .slice(0, 3)
-            .map(number =>
-              Number(number)
-                .toString(16)
-                .padStart(2, "0")
-            )
-            .join("")
-            .toUpperCase();
-        }
-      }
-
-      element.style.setProperty(
-        "--glow-color",
-        glowColor
-      );
-    } else {
-      element.style.removeProperty("--glow-color");
-    }
-  }
-}
-
-async function refreshVerifiedGlows() {
-  if (
-    !supabase ||
-    !currentRoomId ||
-    !channel ||
-    glowRequestRunning
-  ) return;
-
-  const requestedRoom = String(currentRoomId);
-  glowRequestRunning = true;
-
-  try {
-    const { data, error } = await supabase.rpc(
-      "get_chat_room_glow",
-      { p_room_id: requestedRoom }
-    );
-
-    if (error) throw error;
-
-    // Ignore a response from a room we already left.
-    if (String(currentRoomId) !== requestedRoom) {
-      return;
-    }
-
-    verifiedRoomGlows.clear();
-
-    for (const person of data || []) {
-      verifiedRoomGlows.set(
-        String(person.account_id),
-        person.has_glow === true
-      );
-    }
-
-    glowRoomId = requestedRoom;
-    repaintVerifiedGlows();
-
-  } catch (error) {
-    console.warn(
-      "[Glow] Could not refresh verified permissions:",
-      error.message
-    );
-  } finally {
-    glowRequestRunning = false;
-
-    // If we switched rooms during the request,
-    // immediately refresh for the new room.
-    if (
-      currentRoomId &&
-      String(currentRoomId) !== requestedRoom
-    ) {
-      scheduleGlowRefresh();
-    }
-  }
-}
-
-function scheduleGlowRefresh() {
-  clearTimeout(glowRefreshTimer);
-
-  glowRefreshTimer = setTimeout(() => {
-    refreshVerifiedGlows();
-  }, 250);
-}
-
-// Replace the old self-only glow logic.
-// Existing chat rendering will automatically use this.
-applyOwnGlow = function(element, accountId) {
-  const id = String(accountId || "");
-
-  element.dataset.accountId = id;
-
-  // Never trust role/glow claims from the browser.
-  const hasGlow =
-    glowRoomId === String(currentRoomId) &&
-    verifiedRoomGlows.get(id) === true;
-
-  element.classList.toggle("chat-glow", hasGlow);
-
-  if (hasGlow) {
-    element.style.setProperty(
-      "--glow-color",
-      validColor(
-        id === String(profile?.account_id)
-          ? profile.nickname_color
-          : "#FFFFFF"
-      )
-    );
-  } else {
-    element.style.removeProperty("--glow-color");
-  }
-};
-
-// Every Presence update rebuilds the user list.
-// Refresh server-verified glow permissions too.
-const originalRenderUsers = renderUsers;
-
-renderUsers = function() {
-  originalRenderUsers();
-
-  if (glowRoomId !== String(currentRoomId)) {
-    verifiedRoomGlows.clear();
-    glowRoomId = null;
-  }
-
-  repaintVerifiedGlows();
-  scheduleGlowRefresh();
-};
-
-// Messages also receive verified glow permissions.
-// Newly arrived users may not be in the cache yet.
-const originalDisplayMessage = displayMessage;
-
-displayMessage = function(data) {
-  originalDisplayMessage(data);
-
-  repaintVerifiedGlows();
-
-  if (
-    data?.account_id &&
-    !verifiedRoomGlows.has(String(data.account_id))
-  ) {
-    scheduleGlowRefresh();
-  }
-};
-
-// Recheck periodically for room-owner transfers,
-// newly granted glows, and admin role changes.
+// Periodically refresh server-verified permissions.
 setInterval(() => {
   if (currentRoomId && channel) {
     refreshVerifiedGlows();
   }
 }, 12000);
 
+startChat();
+
 console.log(
-  "[Glow] Server-verified room glow enabled!"
+  "[SolarEraser Chat] Step 107 loaded!"
 );
