@@ -1698,9 +1698,11 @@ console.log(
   "[SolarEraser Chat] Step 107 loaded!"
 );
 
-// STEP 108C — Nickname and ID click behavior.
-// Normal click = nickname.
-// Shift-click = account ID.
+// STEP 108D — Restore original username-click behavior.
+//
+// Click: append nickname + copy nickname.
+// Shift-click: append account ID + copy ID.
+// NEVER erase existing input text.
 
 (function fixUserClicks() {
   userNames.addEventListener("click", async event => {
@@ -1712,6 +1714,7 @@ console.log(
       return;
     }
 
+    // Prevent the older username handler from running.
     event.stopPropagation();
 
     const value = event.shiftKey
@@ -1720,17 +1723,33 @@ console.log(
 
     if (!value) return;
 
+    // Preserve everything already typed.
+    const existing = sendArea.value;
+
+    // Add a space only when needed.
+    const separator =
+      existing.length > 0 && !/\s$/.test(existing)
+        ? " "
+        : "";
+
+    sendArea.value = existing + separator + value;
+
+    // Put the cursor at the end.
+    sendArea.focus();
+    sendArea.setSelectionRange(
+      sendArea.value.length,
+      sendArea.value.length
+    );
+
+    // Copy the same value to clipboard.
     try {
       await navigator.clipboard.writeText(value);
     } catch (error) {
       console.warn("[Clipboard]", error);
     }
-
-    sendArea.value = value;
-    sendArea.focus();
   }, true);
 
   console.log(
-    "[Users] Nickname/ID click behavior updated!"
+    "[Users] Append nickname/ID without replacing text!"
   );
 })();
