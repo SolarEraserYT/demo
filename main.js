@@ -1422,3 +1422,47 @@ if (settingsButtonFix) {
     "[Settings] Could not find settings button."
   );
 }
+
+/*
+  STEP 99 — Fix settings gear using its
+  actual selector from index.html.
+*/
+
+const realSettingsGear = document.querySelector(
+  '.menu_button[data-target="settings"]'
+);
+
+if (realSettingsGear) {
+  realSettingsGear.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Toggle the existing color picker.
+    const isOpen = colorMenu.style.display !== "none";
+
+    if (isOpen) {
+      colorMenu.style.display = "none";
+      closeColorPopup();
+      return;
+    }
+
+    const rect = realSettingsGear.getBoundingClientRect();
+
+    colorMenu.style.left = Math.max(8, rect.left) + "px";
+    colorMenu.style.top = Math.max(8, rect.bottom + 5) + "px";
+
+    colorSelect.value = "new";
+
+    setPickerHex(
+      profile?.nickname_color || "#FFFFFF"
+    );
+
+    updateColorSlotOptions();
+
+    colorMenu.style.display = "block";
+  });
+
+  console.log(
+    "[Settings] Real settings gear connected!"
+  );
+}
