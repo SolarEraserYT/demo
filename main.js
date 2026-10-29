@@ -1466,3 +1466,54 @@ if (realSettingsGear) {
     "[Settings] Real settings gear connected!"
   );
 }
+
+// STEP 100 — Fix EmuChat color picker positioning
+// and make the color preview square clickable.
+
+(function fixColorPicker() {
+  // Override the old upward-opening popup style.
+  const fixStyle = document.createElement("style");
+
+  fixStyle.textContent = `
+    .solar-color-menu {
+      overflow: visible !important;
+    }
+
+    .solar-color-popup {
+      top: calc(100% + 4px) !important;
+      bottom: auto !important;
+      left: 0 !important;
+      z-index: 10001 !important;
+    }
+
+    .solar-color-preview {
+      cursor: pointer !important;
+    }
+
+    .solar-color-preview:hover {
+      outline: 1px solid #aaa;
+    }
+  `;
+
+  document.head.appendChild(fixStyle);
+
+  // Clicking the colored square opens the picker.
+  colorPreview.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (colorPopup.classList.contains("open")) {
+      closeColorPopup();
+    } else {
+      setPickerHex(
+        profile?.nickname_color || "#FFFFFF"
+      );
+
+      openColorPopup();
+    }
+  });
+
+  console.log(
+    "[Colors] Popup positioning and preview fixed!"
+  );
+})();
