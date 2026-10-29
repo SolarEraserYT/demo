@@ -1517,3 +1517,52 @@ if (realSettingsGear) {
     "[Colors] Popup positioning and preview fixed!"
   );
 })();
+
+// STEP 102 — Updated nickname commands
+// Supports spaces, emojis, and owner/admin exceptions.
+// Supabase validates the actual nickname rules.
+
+async function changeNickname(rawNickname) {
+  const nickname = rawNickname.trim();
+
+  if (!nickname) {
+    privateWarning("Usage: /nick YOUR NAME");
+    return;
+  }
+
+  const { data, error } = await supabase.rpc(
+    "change_chat_nickname",
+    { p_nickname: nickname }
+  );
+
+  if (error) {
+    privateWarning(error.message);
+    return;
+  }
+
+  profile.nickname =
+    typeof data === "string" ? data : nickname;
+
+  if (channel && presenceWorking) {
+    try {
+      const result = await trackMyPresence();
+
+      if (result !== "ok") {
+        privateWarning(
+          "Nickname saved, but the online list may need a reconnect."
+        );
+      }
+    } catch (error) {
+      console.warn(
+        "[Presence] Nickname update:",
+        error
+      );
+    }
+  }
+
+  renderUsers();
+
+  privateWarning(
+    "Your nickname is now " + profile.nickname + "."
+  );
+}
