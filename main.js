@@ -1753,3 +1753,163 @@ console.log(
     "[Users] Append nickname/ID without replacing text!"
   );
 })();
+
+/*
+  SolarEraser Chat — Step 109E
+  /kick command and private moderation events
+
+  Keep all existing code above this block.
+*/
+
+(function installKickSystem() {
+  const UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  let checkingEvents = false;
+  let kicking = false;
+
+  async function kickUser(targetId) {
+    if (!UUID_PATTERN.test(targetId)) {
+      privateWarning(
+        "Usage: /kick USER_ID (Shift-click a username)"
+      );
+      return;
+    }
+
+    if (!supabase || !currentRoomId) {
+      privateWarning("You are not connected to a room.");
+      return;
+    }
+
+    if (kicking) return;
+    kicking = true;
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "kick_chat_user",
+        {
+          p_room_id: currentRoomId,
+          p_target_account_id: targetId
+        }
+      );
+
+      if (error) throw error;
+
+      // Private confirmation to the moderator only.
+      privateWarning(data || "User kicked to Main Room.");
+
+      // Refresh server-verified room glow.
+      scheduleGlowRefresh();
+
+    } catch (error) {
+      privateWarning(
+        "Kick failed: " + error.message
+      );
+    } finally {
+      kicking = false;
+    }
+  }
+
+  async function checkKickEvents() {
+    if (
+      !supabase ||
+      !profile ||
+      switching ||
+      checkingEvents
+    ) {
+      return;
+    }
+
+    checkingEvents = true;
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "my_chat_mod_events"
+      );
+
+      if (error) throw error;
+
+      for (const event of data || []) {
+        if (switching) break;
+
+        if (event.event_type !== "kick") {
+          continue;
+        }
+
+        const sourceRoom = String(
+          event.source_room_id || ""
+        );
+
+        const stillInKickedRoom =
+          String(currentRoomId || "") === sourceRoom;
+
+        if (stillInKickedRoom) {
+          const moved = await joinRoom(
+            "Main Room",
+            "public"
+          );
+
+          if (!moved) {
+            // Retry later if the room switch fails.
+            break;
+          }
+
+          privateWarning(
+            "You were kicked to Main Room."
+          );
+        }
+
+        // Do not pull someone out of a different
+        // room because of an old notification.
+
+        const { error: ackError } = await supabase.rpc(
+          "ack_chat_mod_event",
+          { p_event_id: event.event_id }
+        );
+
+        if (ackError) throw ackError;
+      }
+
+    } catch (error) {
+      console.warn(
+        "[Kick] Event check failed:",
+        error.message
+      );
+    } finally {
+      checkingEvents = false;
+    }
+  }
+
+  /*
+    Intercept only /kick.
+
+    All other commands continue through your
+    existing command handler unchanged.
+  */
+
+  const originalHandleCommand = handleCommand;
+
+  handleCommand = async function(content) {
+    const match = content.match(
+      /^\/kick(?:\s+(.*))?$/i
+    );
+
+    if (match) {
+      await kickUser((match[1] || "").trim());
+      return;
+    }
+
+    return originalHandleCommand(content);
+  };
+
+  // Poll private moderation events every 2.5 seconds.
+  // This does not create public chat messages.
+  setInterval(checkKickEvents, 2500);
+
+  // Check shortly after startup as well.
+  setTimeout(checkKickEvents, 3000);
+
+  console.log(
+    "[SolarEraser Chat] Step 109E /kick loaded!"
+  );
+})();
