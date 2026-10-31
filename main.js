@@ -1913,3 +1913,240 @@ console.log(
     "[SolarEraser Chat] Step 109E /kick loaded!"
   );
 })();
+
+/*
+  SolarEraser Chat — Step 110D
+
+  Adds:
+    /timeout USER_ID
+    /untimeout USER_ID
+
+  Handles:
+    timeout  -> Spam
+    untimeout -> Main Room
+
+  Keep ALL existing JavaScript above this block.
+  Existing /kick remains unchanged.
+*/
+
+(function installTimeoutSystem() {
+  const UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  let moderationBusy = false;
+  let checkingTimeoutEvents = false;
+
+  // ------------------------------------------
+  // TIMEOUT COMMANDS
+  // ------------------------------------------
+
+  async function runTimeoutCommand(
+    action,
+    targetId
+  ) {
+    if (!UUID_PATTERN.test(targetId)) {
+      privateWarning(
+        "Usage: /" + action +
+        " USER_ID (Shift-click a username)"
+      );
+      return;
+    }
+
+    if (!supabase || !profile || !currentRoomId) {
+      privateWarning("Chat is not connected.");
+      return;
+    }
+
+    if (moderationBusy) return;
+
+    moderationBusy = true;
+
+    try {
+      const functionName =
+        action === "timeout"
+          ? "timeout_chat_user"
+          : "untimeout_chat_user";
+
+      const { data, error } = await supabase.rpc(
+        functionName,
+        {
+          p_target_account_id: targetId
+        }
+      );
+
+      if (error) throw error;
+
+      privateWarning(
+        data || (
+          action === "timeout"
+            ? "User moved to Spam."
+            : "User released to Main Room."
+        )
+      );
+
+      scheduleGlowRefresh();
+
+    } catch (error) {
+      privateWarning(
+        "/" + action + " failed: " +
+        error.message
+      );
+
+    } finally {
+      moderationBusy = false;
+    }
+  }
+
+  // ------------------------------------------
+  // PRIVATE MODERATION EVENTS
+  // ------------------------------------------
+
+  async function checkTimeoutEvents() {
+    if (
+      !supabase ||
+      !profile ||
+      switching ||
+      checkingTimeoutEvents
+    ) {
+      return;
+    }
+
+    checkingTimeoutEvents = true;
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "my_chat_mod_events"
+      );
+
+      if (error) throw error;
+
+      for (const event of data || []) {
+        if (switching) break;
+
+        const type = event.event_type;
+
+        // Leave kick events for the existing
+        // Step 109E kick listener.
+        if (
+          type !== "timeout" &&
+          type !== "untimeout"
+        ) {
+          continue;
+        }
+
+        const sourceRoom = String(
+          event.source_room_id || ""
+        );
+
+        const inSourceRoom =
+          String(currentRoomId || "") === sourceRoom;
+
+        const destination =
+          type === "timeout"
+            ? "Spam"
+            : "Main Room";
+
+        // Only move automatically if the browser
+        // is still showing the affected room.
+        //
+        // Old events should not pull the user
+        // out of a room they joined later.
+
+        if (inSourceRoom) {
+          const moved = await joinRoom(
+            destination,
+            "public"
+          );
+
+          if (!moved) {
+            // Do not acknowledge a failed move.
+            // The next poll will retry.
+            break;
+          }
+
+          if (type === "timeout") {
+            privateWarning(
+              "You have been timed out. " +
+              "You cannot leave Spam until " +
+              "a moderator releases you."
+            );
+          } else {
+            privateWarning(
+              "Your timeout has ended. " +
+              "You have been moved to Main Room."
+            );
+          }
+        }
+
+        const { error: ackError } =
+          await supabase.rpc(
+            "ack_chat_mod_event",
+            {
+              p_event_id: event.event_id
+            }
+          );
+
+        if (ackError) throw ackError;
+      }
+
+    } catch (error) {
+      console.warn(
+        "[Timeout] Event check failed:",
+        error.message
+      );
+
+    } finally {
+      checkingTimeoutEvents = false;
+    }
+  }
+
+  // ------------------------------------------
+  // COMMAND HANDLER
+  // ------------------------------------------
+
+  // Preserve the existing command handler,
+  // including the working /kick command.
+
+  const previousHandleCommand = handleCommand;
+
+  handleCommand = async function(content) {
+    const timeoutMatch = content.match(
+      /^\/timeout(?:\s+(.*))?$/i
+    );
+
+    if (timeoutMatch) {
+      await runTimeoutCommand(
+        "timeout",
+        (timeoutMatch[1] || "").trim()
+      );
+      return;
+    }
+
+    const untimeoutMatch = content.match(
+      /^\/untimeout(?:\s+(.*))?$/i
+    );
+
+    if (untimeoutMatch) {
+      await runTimeoutCommand(
+        "untimeout",
+        (untimeoutMatch[1] || "").trim()
+      );
+      return;
+    }
+
+    return previousHandleCommand(content);
+  };
+
+  // ------------------------------------------
+  // AUTOMATIC EVENT CHECKING
+  // ------------------------------------------
+
+  setInterval(checkTimeoutEvents, 2500);
+
+  setTimeout(checkTimeoutEvents, 3500);
+
+  console.log(
+    "[SolarEraser Chat] " +
+    "Step 110D timeout system loaded!"
+  );
+})();
