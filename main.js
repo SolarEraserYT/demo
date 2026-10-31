@@ -2150,3 +2150,81 @@ console.log(
     "Step 110D timeout system loaded!"
   );
 })();
+
+/*
+  SolarEraser Chat — Step 110E
+  Timeout refresh recovery
+
+  Paste at the very bottom of main.js.
+  Keep all existing code.
+*/
+
+(function installTimeoutRefreshRecovery() {
+  let recoveryRunning = false;
+
+  const originalJoinRoom = joinRoom;
+
+  joinRoom = async function(roomName, roomType = "public") {
+    const result = await originalJoinRoom(
+      roomName,
+      roomType
+    );
+
+    if (
+      result ||
+      recoveryRunning ||
+      !supabase ||
+      !profile ||
+      roomName !== "Main Room" ||
+      roomType !== "public"
+    ) {
+      return result;
+    }
+
+    recoveryRunning = true;
+
+    try {
+      // A failed Main Room join might mean the
+      // account is timed out. Let the server decide
+      // whether Spam is allowed.
+
+      const spamResult = await originalJoinRoom(
+        "Spam",
+        "public"
+      );
+
+      if (spamResult) {
+        privateWarning(
+          "You are timed out. " +
+          "You must remain in Spam until " +
+          "a moderator releases you."
+        );
+
+        return true;
+      }
+
+      return false;
+
+    } finally {
+      recoveryRunning = false;
+    }
+  };
+
+  // startChat() may already be running when
+  // this block loads, so check once afterward.
+  setTimeout(async () => {
+    if (
+      supabase &&
+      profile &&
+      !currentRoomId &&
+      !switching
+    ) {
+      await joinRoom("Main Room", "public");
+    }
+  }, 4000);
+
+  console.log(
+    "[SolarEraser Chat] " +
+    "Step 110E refresh recovery loaded!"
+  );
+})();
