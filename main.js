@@ -1903,7 +1903,7 @@ console.log(
 
   // Poll private moderation events every 2.5 seconds.
   // This does not create public chat messages.
-  setInterval(checkKickEvents, 2500);
+  setInterval(checkKickEvents, 10000);
 
   // Check shortly after startup as well.
   setTimeout(checkKickEvents, 3000);
@@ -2140,7 +2140,7 @@ console.log(
   // AUTOMATIC EVENT CHECKING
   // ------------------------------------------
 
-  setInterval(checkTimeoutEvents, 2500);
+  setInterval(checkTimeoutEvents, 10000);
 
   setTimeout(checkTimeoutEvents, 3500);
 
