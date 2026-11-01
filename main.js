@@ -144,7 +144,7 @@ statusBar.style.cssText = [
   "border-radius:5px"
 ].join(";");
 
-document.body.appendChild(statusBar);
+statusBar.style.display = "none";
 
 function setStatus(text, error = false) {
   statusBar.textContent = text;
@@ -449,8 +449,7 @@ function renderUsers() {
     userNames.appendChild(item);
   }
 
-  repaintVerifiedGlows();
-  scheduleGlowRefresh();
+repaintVerifiedGlows();
 }
 
 // --------------------------------------------------
