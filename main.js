@@ -510,6 +510,72 @@ async function trackMyPresence() {
   });
 }
 
+ // STEP 111D — Recover room Presence after Realtime reconnects.
+let presenceRecoveryRunning = false;
+let lastPresenceRecoveryAttempt = 0;
+
+async function recoverRoomPresence(expectedChannel = channel) {
+  if (
+    presenceRecoveryRunning ||
+    switching ||
+    !profile ||
+    !currentRoomId ||
+    !expectedChannel ||
+    channel !== expectedChannel ||
+    expectedChannel.state !== "joined"
+  ) return;
+
+  // Avoid hammering Realtime if a Presence sync is delayed.
+  const now = Date.now();
+  if (now - lastPresenceRecoveryAttempt < 8000) return;
+  lastPresenceRecoveryAttempt = now;
+  presenceRecoveryRunning = true;
+
+  try {
+    const result = await expectedChannel.track({
+      account_id: profile.account_id,
+      nickname: profile.nickname,
+      nickname_color: validColor(profile.nickname_color)
+    });
+
+    if (channel !== expectedChannel) return;
+
+    if (result === "ok") {
+      presenceWorking = true;
+      renderUsers();
+      console.log("[Presence] Re-tracked after reconnect/check.");
+    } else {
+      console.warn("[Presence] Recovery track result:", result);
+    }
+  } catch (error) {
+    console.warn("[Presence] Recovery failed:", error);
+  } finally {
+    presenceRecoveryRunning = false;
+  }
+}
+
+// A lost Presence entry can also happen without a fresh SUBSCRIBED event.
+// Verify our own account is still in the current channel's Presence state.
+setInterval(() => {
+  if (
+    !channel ||
+    !profile ||
+    !currentRoomId ||
+    switching ||
+    channel.state !== "joined"
+  ) return;
+
+  const state = channel.presenceState();
+  const myAccountId = String(profile.account_id);
+  const found = Object.values(state).some(entries =>
+    Array.isArray(entries) && entries.some(entry =>
+      String(entry?.account_id || "") === myAccountId
+    )
+  );
+
+  if (!found) recoverRoomPresence(channel);
+}, 12000);
+
 // --------------------------------------------------
 // JOIN ROOMS
 // --------------------------------------------------
@@ -617,23 +683,41 @@ async function joinRoom(roomName, roomType = "public") {
 
     channel = newChannel;
 
+   
     await new Promise((resolve, reject) => {
+      let initiallySubscribed = false;
+
       newChannel.subscribe((state, error) => {
+        if (channel !== newChannel) return;
+
         if (state === "SUBSCRIBED") {
-          resolve();
+          if (!initiallySubscribed) {
+            initiallySubscribed = true;
+            resolve();
+          } else {
+            // A re-subscription may reset server-side Presence.
+            // Re-track instead of only redrawing the user list.
+            recoverRoomPresence(newChannel);
+          }
 
         } else if (
           state === "CHANNEL_ERROR" ||
           state === "TIMED_OUT" ||
           state === "CLOSED"
         ) {
-          reject(
-            error ||
-            new Error("Realtime subscription failed")
-          );
+          presenceWorking = false;
+          userNames.replaceChildren();
+
+          if (!initiallySubscribed) {
+            reject(
+              error ||
+              new Error("Realtime subscription failed")
+            );
+          }
         }
       });
     });
+
 
     if (attempt !== connectionNumber) {
       return false;
