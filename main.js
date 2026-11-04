@@ -968,10 +968,21 @@ async function sendMessage() {
       return;
     }
 
-    if (data?.status === "cooldown") {
-      cooldownWarning(data.wait_seconds);
-      return;
-    }
+    
+if (data?.status === "cooldown") {
+  cooldownWarning(data.wait_seconds);
+
+  // Clear the rejected message, but don't erase
+  // anything new typed while the request was pending.
+  if (sendArea.value.trim() === content) {
+    sendArea.value = "";
+  } else if (sendArea.value.startsWith(content)) {
+    sendArea.value = sendArea.value.slice(content.length);
+  }
+
+  return;
+}
+
 
 
 if (data?.status === "sent") {
