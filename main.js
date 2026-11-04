@@ -1896,9 +1896,6 @@ console.log(
 
       if (error) throw error;
 
-      // Private confirmation to the moderator only.
-      privateWarning(data || "User kicked to Main Room.");
-
       // Refresh server-verified room glow.
       scheduleGlowRefresh();
 
@@ -2076,14 +2073,6 @@ console.log(
       );
 
       if (error) throw error;
-
-      privateWarning(
-        data || (
-          action === "timeout"
-            ? "User moved to Spam."
-            : "User released to Main Room."
-        )
-      );
 
       scheduleGlowRefresh();
 
