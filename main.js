@@ -973,12 +973,19 @@ async function sendMessage() {
       return;
     }
 
-    if (data?.status === "sent") {
-      if (sendArea.value.trim() === content) {
-        sendArea.value = "";
-      }
-      return;
-    }
+
+if (data?.status === "sent") {
+  // Clear the submitted message, but preserve anything
+  // the user typed while waiting for the server.
+  if (sendArea.value.trim() === content) {
+    sendArea.value = "";
+  } else if (sendArea.value.startsWith(content)) {
+    sendArea.value = sendArea.value.slice(content.length);
+  }
+
+  return;
+}
+
 
     privateWarning("Unexpected message response.");
 
