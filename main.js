@@ -2227,3 +2227,210 @@ console.log(
     "Step 110E refresh recovery loaded!"
   );
 })();
+
+/*
+  SolarEraser Chat — Step 111C-4
+  Private Realtime moderation notifications
+
+  Keep all existing code above this block.
+  Existing polling remains as backup.
+*/
+
+(function installRealtimeModeration() {
+  let moderationChannel = null;
+  let connecting = false;
+  let processing = false;
+
+  async function processModerationEvents() {
+    if (
+      processing ||
+      !supabase ||
+      !profile ||
+      !currentRoomId ||
+      switching
+    ) return;
+
+    processing = true;
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "my_chat_mod_events"
+      );
+
+      if (error) throw error;
+
+      for (const event of data || []) {
+        if (switching) break;
+
+        const type = event.event_type;
+
+        if (
+          type !== "kick" &&
+          type !== "timeout" &&
+          type !== "untimeout"
+        ) {
+          continue;
+        }
+
+        const sourceRoom = String(
+          event.source_room_id || ""
+        );
+
+        const stillInSource =
+          String(currentRoomId || "") === sourceRoom;
+
+        if (stillInSource) {
+          const destination =
+            type === "timeout" ? "Spam" : "Main Room";
+
+          const moved = await joinRoom(
+            destination,
+            "public"
+          );
+
+          if (!moved) break;
+
+          if (type === "kick") {
+            privateWarning(
+              "You were kicked to Main Room."
+            );
+          } else if (type === "timeout") {
+            privateWarning(
+              "You have been timed out. " +
+              "You cannot leave Spam until " +
+              "a moderator releases you."
+            );
+          } else {
+            privateWarning(
+              "Your timeout has ended. " +
+              "You have been moved to Main Room."
+            );
+          }
+        }
+
+        const { error: ackError } =
+          await supabase.rpc(
+            "ack_chat_mod_event",
+            { p_event_id: event.event_id }
+          );
+
+        if (ackError) throw ackError;
+      }
+
+    } catch (error) {
+      console.warn(
+        "[Realtime moderation]",
+        error.message
+      );
+    } finally {
+      processing = false;
+    }
+  }
+
+  async function connectModerationChannel() {
+    if (
+      connecting ||
+      moderationChannel ||
+      !supabase ||
+      !authUserId ||
+      !profile
+    ) return;
+
+    connecting = true;
+
+    try {
+      const { data: sessionData } =
+        await supabase.auth.getSession();
+
+      const token =
+        sessionData.session?.access_token;
+
+      if (!token) {
+        throw new Error("No auth token.");
+      }
+
+      await supabase.realtime.setAuth(token);
+
+      const topic = "chat-mod:" + authUserId;
+
+      const newChannel = supabase.channel(
+        topic,
+        {
+          config: {
+            private: true
+          }
+        }
+      );
+
+      newChannel.on(
+        "broadcast",
+        { event: "moderation_changed" },
+        () => {
+          processModerationEvents();
+        }
+      );
+
+      moderationChannel = newChannel;
+
+      newChannel.subscribe(status => {
+        if (status === "SUBSCRIBED") {
+          console.log(
+            "[Moderation] Private Realtime connected!"
+          );
+
+          processModerationEvents();
+        }
+
+        if (
+          status === "CHANNEL_ERROR" ||
+          status === "TIMED_OUT" ||
+          status === "CLOSED"
+        ) {
+          console.warn(
+            "[Moderation] Channel status:",
+            status
+          );
+
+          if (moderationChannel === newChannel) {
+            moderationChannel = null;
+          }
+        }
+      });
+
+    } catch (error) {
+      console.warn(
+        "[Moderation] Connection failed:",
+        error.message
+      );
+    } finally {
+      connecting = false;
+    }
+  }
+
+  // Wait until anonymous login and profile load.
+  const startupTimer = setInterval(() => {
+    if (!supabase || !authUserId || !profile) {
+      return;
+    }
+
+    clearInterval(startupTimer);
+    connectModerationChannel();
+  }, 1000);
+
+  // Retry connection occasionally if necessary.
+  setInterval(() => {
+    if (
+      supabase &&
+      authUserId &&
+      profile &&
+      !moderationChannel
+    ) {
+      connectModerationChannel();
+    }
+  }, 30000);
+
+  console.log(
+    "[SolarEraser Chat] " +
+    "Step 111C Realtime moderation loaded!"
+  );
+})();
