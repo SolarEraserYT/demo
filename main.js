@@ -2536,3 +2536,132 @@ console.log(
     "Step 111C Realtime moderation loaded!"
   );
 })();
+
+/*
+  SolarEraser Chat — Step 113A
+  Electric-blue SERVER announcements
+
+  Presentation only.
+  Trusted server event integration comes in Step 113B.
+*/
+
+(function installBlueServerAnnouncements() {
+  const style = document.createElement("style");
+
+  style.textContent = `
+    .solar-server-name {
+      color: #38A8FF !important;
+      font-weight: 700;
+      text-shadow:
+        0 0 4px #38A8FF,
+        0 0 9px #168AFF,
+        0 0 16px #006DFF;
+    }
+
+    .solar-server-text {
+      color: #B9E0FF !important;
+      text-shadow:
+        0 0 4px rgba(56,168,255,.65),
+        0 0 9px rgba(56,168,255,.25);
+    }
+
+    .solar-server-target {
+      color: #D5EEFF;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .solar-server-target:hover {
+      text-decoration: underline;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  function displayServerAnnouncement(event) {
+    if (!event || typeof event !== "object") return;
+
+    const messagesContainer =
+      document.querySelector(".messages");
+
+    if (!messagesContainer) return;
+
+    const allowedTypes = {
+      kick: "was kicked to Main Room.",
+      timeout: "was timed out and moved to Spam.",
+      untimeout: "was released from timeout.",
+      ban: "was permanently banned from the server."
+    };
+
+    const action = allowedTypes[event.type];
+
+    if (!action) return;
+
+    const nickname = String(
+      event.nickname || "Unknown user"
+    );
+
+    const line = document.createElement("div");
+    line.className = "message_item solar-server-line";
+
+    const time = document.createElement("span");
+    time.className = "time";
+    time.textContent = new Date().toLocaleTimeString(
+      "en-GB",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }
+    );
+
+    const server = document.createElement("span");
+    server.className = "nick solar-server-name";
+    server.textContent = "SERVER";
+
+    const message = document.createElement("span");
+    message.className = "message solar-server-text";
+
+    const target = document.createElement("span");
+    target.className = "solar-server-target";
+    target.textContent = nickname;
+
+    const accountId = String(event.account_id || "");
+
+    if (accountId) {
+      target.title = "Click to copy account ID";
+
+      target.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(accountId);
+        } catch (error) {
+          console.warn("[SERVER] Copy failed:", error);
+        }
+      });
+    } else {
+      target.style.cursor = "default";
+    }
+
+    message.append(
+      target,
+      document.createTextNode(" " + action)
+    );
+
+    line.append(time, server, message);
+
+    messagesContainer.appendChild(line);
+
+    messagesContainer.scrollTop =
+      messagesContainer.scrollHeight;
+  }
+
+  // Internal renderer only. Step 113B will connect
+  // this to authenticated, server-generated events.
+  window.solarRenderServerAnnouncement =
+    displayServerAnnouncement;
+
+  console.log(
+    "[SolarEraser Chat] Step 113A blue SERVER ready!"
+  );
+})();
