@@ -2660,11 +2660,18 @@ console.log(
   Trusted SERVER announcement polling
 */
 
+
+/*
+  SolarEraser Chat — Step 113C-2
+  Database-cursor SERVER announcement listener
+*/
+
 (function installServerAnnouncementListener() {
   let trackedRoomId = null;
-  let joinedAt = null;
   let lastAnnouncementId = 0;
+  let initialized = false;
   let checking = false;
+  let generation = 0;
 
   async function checkServerAnnouncements() {
     if (
@@ -2678,33 +2685,56 @@ console.log(
 
     const roomId = String(currentRoomId);
 
-    // New room = new announcement session.
+    // Every room switch gets a separate cursor.
     if (trackedRoomId !== roomId) {
       trackedRoomId = roomId;
-      joinedAt = Date.now();
       lastAnnouncementId = 0;
+      initialized = false;
+      generation++;
     }
 
     if (checking) return;
     checking = true;
 
-    const requestRoomId = roomId;
+    const requestGeneration = generation;
 
     try {
+      // Initialize from the database, not the device clock.
+      if (!initialized) {
+        const { data, error } = await supabase.rpc(
+          "get_chat_server_announcement_cursor",
+          { p_room_id: roomId }
+        );
+
+        if (error) throw error;
+
+        if (
+          switching ||
+          String(currentRoomId) !== roomId ||
+          requestGeneration !== generation
+        ) {
+          return;
+        }
+
+        lastAnnouncementId = Number(data) || 0;
+        initialized = true;
+        return;
+      }
+
       const { data, error } = await supabase.rpc(
         "get_chat_server_announcements",
         {
-          p_room_id: requestRoomId,
+          p_room_id: roomId,
           p_after_id: lastAnnouncementId
         }
       );
 
       if (error) throw error;
 
-      // Ignore results from a room we have left.
       if (
-        String(currentRoomId) !== requestRoomId ||
-        switching
+        switching ||
+        String(currentRoomId) !== roomId ||
+        requestGeneration !== generation
       ) {
         return;
       }
@@ -2716,18 +2746,6 @@ console.log(
         if (id <= lastAnnouncementId) continue;
 
         lastAnnouncementId = id;
-
-        // No old messages from before joining.
-        const createdAt = Date.parse(
-          announcement.created_at
-        );
-
-        if (
-          !Number.isFinite(createdAt) ||
-          createdAt < joinedAt
-        ) {
-          continue;
-        }
 
         window.solarRenderServerAnnouncement({
           type: announcement.event_type,
@@ -2746,10 +2764,12 @@ console.log(
     }
   }
 
-  // Check for new announcements every 2 seconds.
   setInterval(checkServerAnnouncements, 2000);
 
+  // Initialize shortly after startup.
+  setTimeout(checkServerAnnouncements, 500);
+
   console.log(
-    "[SolarEraser Chat] Step 113B-7 SERVER listener loaded!"
+    "[SolarEraser Chat] Step 113C cursor listener loaded!"
   );
 })();
