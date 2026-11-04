@@ -2665,3 +2665,102 @@ console.log(
     "[SolarEraser Chat] Step 113A blue SERVER ready!"
   );
 })();
+
+/*
+  SolarEraser Chat — Step 113B-7
+  Trusted SERVER announcement polling
+*/
+
+(function installServerAnnouncementListener() {
+  let trackedRoomId = null;
+  let joinedAt = null;
+  let lastAnnouncementId = 0;
+  let checking = false;
+
+  async function checkServerAnnouncements() {
+    if (
+      !supabase ||
+      !currentRoomId ||
+      switching ||
+      typeof window.solarRenderServerAnnouncement !== "function"
+    ) {
+      return;
+    }
+
+    const roomId = String(currentRoomId);
+
+    // New room = new announcement session.
+    if (trackedRoomId !== roomId) {
+      trackedRoomId = roomId;
+      joinedAt = Date.now();
+      lastAnnouncementId = 0;
+    }
+
+    if (checking) return;
+    checking = true;
+
+    const requestRoomId = roomId;
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "get_chat_server_announcements",
+        {
+          p_room_id: requestRoomId,
+          p_after_id: lastAnnouncementId
+        }
+      );
+
+      if (error) throw error;
+
+      // Ignore results from a room we have left.
+      if (
+        String(currentRoomId) !== requestRoomId ||
+        switching
+      ) {
+        return;
+      }
+
+      for (const announcement of data || []) {
+        const id = Number(announcement.id);
+
+        if (!Number.isSafeInteger(id)) continue;
+        if (id <= lastAnnouncementId) continue;
+
+        lastAnnouncementId = id;
+
+        // No old messages from before joining.
+        const createdAt = Date.parse(
+          announcement.created_at
+        );
+
+        if (
+          !Number.isFinite(createdAt) ||
+          createdAt < joinedAt
+        ) {
+          continue;
+        }
+
+        window.solarRenderServerAnnouncement({
+          type: announcement.event_type,
+          nickname: announcement.target_nickname,
+          account_id: announcement.target_account_id
+        });
+      }
+
+    } catch (error) {
+      console.warn(
+        "[SERVER] Announcement check failed:",
+        error.message
+      );
+    } finally {
+      checking = false;
+    }
+  }
+
+  // Check for new announcements every 2 seconds.
+  setInterval(checkServerAnnouncements, 2000);
+
+  console.log(
+    "[SolarEraser Chat] Step 113B-7 SERVER listener loaded!"
+  );
+})();
