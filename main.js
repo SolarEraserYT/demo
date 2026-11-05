@@ -3785,3 +3785,130 @@ line.dataset.solarWelcome = "true";
     "[Step 121C] Topic moved into toolbar!"
   );
 })();
+
+/*
+  STEP 122A — Dynamic input hint + connecting screen
+
+  Shows the current nickname in the input bar.
+  Shows a yellow connection notice until joined.
+  Keeps the scrolling topic visible throughout.
+*/
+
+(function installChatVisualPolish() {
+  const CONNECTING_TEXT = "Trying to connect...";
+
+  // ------------------------------------------
+  // 1. Dynamic nickname hint
+  // ------------------------------------------
+
+  function updateInputHint() {
+    if (chatAccountBanned) return;
+
+    const nickname = profile?.nickname || "Guest";
+
+    if (!sendArea.disabled) {
+      sendArea.placeholder =
+        'You are typing as "' + nickname +
+        '". To change nick, type /nick and your new nickname.';
+    }
+  }
+
+  // Keep the hint updated after nickname changes,
+  // reconnects and room switches.
+  setInterval(updateInputHint, 500);
+
+  // ------------------------------------------
+  // 2. Connection message
+  // ------------------------------------------
+
+  let connectingNotice = null;
+
+  function showConnectingNotice() {
+    if (connectingNotice || chatAccountBanned) return;
+
+    const line = document.createElement("div");
+    line.className = "message_item";
+    line.id = "solar-connecting-notice";
+
+    const time = document.createElement("span");
+    time.className = "time";
+    time.textContent =
+      "[" + new Date().toLocaleTimeString(
+        "en-GB",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false
+        }
+      ) + "]";
+
+    const text = document.createElement("span");
+    text.className = "message";
+    text.textContent = CONNECTING_TEXT;
+    text.style.color = "#ffd447";
+    text.style.fontWeight = "bold";
+
+    line.append(time, text);
+
+    messages.prepend(line);
+    connectingNotice = line;
+  }
+
+  function removeConnectingNotice() {
+    if (connectingNotice) {
+      connectingNotice.remove();
+      connectingNotice = null;
+    }
+  }
+
+  // Display while the initial room is connecting.
+  if (!currentRoomId && !chatAccountBanned) {
+    showConnectingNotice();
+  }
+
+  // Monitor connection state without changing
+  // the existing room or Realtime logic.
+  setInterval(() => {
+    if (chatAccountBanned) {
+      removeConnectingNotice();
+      return;
+    }
+
+    if (currentRoomId && channel && !switching) {
+      removeConnectingNotice();
+      updateInputHint();
+    } else if (!currentRoomId && !switching) {
+      showConnectingNotice();
+    }
+  }, 250);
+
+  // ------------------------------------------
+  // 3. Visual styling
+  // ------------------------------------------
+
+  const style = document.createElement("style");
+
+  style.textContent = `
+    .send_area::placeholder {
+      color: #a6a9b8;
+      opacity: 1;
+      font-size: 12px;
+    }
+
+    #solar-connecting-notice .time {
+      color: #ffd447;
+      margin-right: 5px;
+    }
+
+    #solar-connecting-notice .message {
+      color: #ffd447;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  console.log(
+    "[Step 122A] Input hint and connection screen installed!"
+  );
+})();
