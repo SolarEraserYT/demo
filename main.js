@@ -3605,3 +3605,131 @@ line.dataset.solarWelcome = "true";
 
   console.log("[Step 120B] Welcome messages loaded!");
 })();
+
+/*
+  STEP 121B — Scrolling room topics
+
+  Main Room: welcome instructions
+  Spam: timeout explanation
+  Private rooms: ownership and /topic
+
+  /topic will be implemented later.
+*/
+
+(function installScrollingRoomTopics() {
+  const MAIN_TOPIC =
+    "Welcome to SolarEraser Chat! " +
+    "To change your nickname type /nick and your new nickname. " +
+    "To join a room type /join and the room name. " +
+    "If you experience any lag, try disabling some options " +
+    "in the ⚙️ settings panel.";
+
+  const SPAM_TOPIC =
+    "If you were moved here, that means you have been " +
+    "temporarily timed out. Spamming is allowed here.";
+
+  const PRIVATE_TOPIC =
+    "If your nickname glows, you are the current owner " +
+    "of the room. You can change this topic by typing " +
+    "/topic and the new room topic.";
+
+  const topicBar = document.createElement("div");
+  topicBar.id = "solar-room-topic";
+
+  const topicText = document.createElement("span");
+  topicText.id = "solar-room-topic-text";
+
+  topicBar.appendChild(topicText);
+
+  const topicStyle = document.createElement("style");
+
+  topicStyle.textContent = `
+    #solar-room-topic {
+      width: 100%;
+      height: 22px;
+      box-sizing: border-box;
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+      background: #292929;
+      border-bottom: 1px solid #555;
+      color: #ff76ca;
+      font: 12px Arial, sans-serif;
+      display: flex;
+      align-items: center;
+    }
+
+    #solar-room-topic-text {
+      display: inline-block;
+      white-space: nowrap;
+      flex: none;
+      padding-left: 100%;
+      animation: solarTopicScroll 28s linear infinite;
+      will-change: transform;
+    }
+
+    @keyframes solarTopicScroll {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-100%);
+      }
+    }
+  `;
+
+  document.head.appendChild(topicStyle);
+
+  // Place topic bar above the chat messages.
+  messages.parentNode.insertBefore(topicBar, messages);
+
+  let displayedTopic = "";
+
+  function updateTopic() {
+    let topic = MAIN_TOPIC;
+
+    if (currentRoomType === "private") {
+      topic = PRIVATE_TOPIC;
+    } else if (currentRoom === "Spam") {
+      topic = SPAM_TOPIC;
+    }
+
+    if (topic === displayedTopic) return;
+
+    displayedTopic = topic;
+    topicText.textContent = topic;
+
+    // Restart scrolling when the topic changes.
+    topicText.style.animation = "none";
+    void topicText.offsetWidth;
+    topicText.style.animation = "";
+  }
+
+  // Update immediately after switching rooms.
+  const originalJoinRoom = joinRoom;
+
+  joinRoom = async function(...args) {
+    const result = await originalJoinRoom(...args);
+
+    if (result === true) {
+      updateTopic();
+    }
+
+    return result;
+  };
+
+  // Show the appropriate topic on startup.
+  updateTopic();
+
+  // Catch initial connection and moderation moves.
+  setInterval(() => {
+    if (currentRoomId && !switching) {
+      updateTopic();
+    }
+  }, 500);
+
+  console.log(
+    "[Step 121B] Three scrolling room topics installed!"
+  );
+})();
