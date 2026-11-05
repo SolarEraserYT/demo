@@ -2993,3 +2993,188 @@ console.log(
     "[SolarEraser Chat] Step 114O /rooms loaded!"
   );
 })();
+// ==================================================
+// STEP 115C — Admin-only /find USER_ID
+// ==================================================
+
+(function installAdminFindCommand() {
+  const previousHandleCommand = handleCommand;
+
+  const UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  // Private popup, matching the /rooms design.
+  const overlay = document.createElement("div");
+
+  overlay.style.cssText = [
+    "position:fixed",
+    "inset:0",
+    "z-index:100001",
+    "background:rgba(0,0,0,.65)",
+    "display:none",
+    "align-items:center",
+    "justify-content:center",
+    "padding:16px"
+  ].join(";");
+
+  const popup = document.createElement("div");
+
+  popup.style.cssText = [
+    "background:#202431",
+    "color:#e9eaf5",
+    "border:1px solid #41475c",
+    "border-radius:8px",
+    "padding:18px",
+    "width:min(420px,100%)",
+    "max-height:75vh",
+    "overflow-y:auto",
+    "font:13px Arial,sans-serif"
+  ].join(";");
+
+  const heading = document.createElement("div");
+
+  heading.style.cssText =
+    "display:flex;justify-content:space-between;" +
+    "align-items:center;margin-bottom:14px;";
+
+  const title = document.createElement("strong");
+  title.textContent = "Find User";
+  title.style.fontSize = "16px";
+
+  const closeButton = document.createElement("button");
+  closeButton.textContent = "✕";
+
+  closeButton.style.cssText =
+    "background:none;border:0;color:#aaa;" +
+    "font-size:18px;cursor:pointer;";
+
+  const content = document.createElement("div");
+
+  function closePopup() {
+    overlay.style.display = "none";
+  }
+
+  closeButton.addEventListener("click", closePopup);
+
+  overlay.addEventListener("click", event => {
+    if (event.target === overlay) closePopup();
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") closePopup();
+  });
+
+  heading.append(title, closeButton);
+  popup.append(heading, content);
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+
+  function addResultRow(label, value) {
+    const row = document.createElement("div");
+
+    row.style.cssText =
+      "display:flex;justify-content:space-between;" +
+      "gap:12px;padding:10px 0;" +
+      "border-bottom:1px solid #353a4b;";
+
+    const name = document.createElement("span");
+    name.textContent = label;
+    name.style.color = "#aaaec7";
+
+    const result = document.createElement("span");
+    result.textContent = String(value);
+    result.style.textAlign = "right";
+    result.style.overflowWrap = "anywhere";
+
+    row.append(name, result);
+    content.appendChild(row);
+  }
+
+  async function findUser(targetId) {
+    if (!supabase || !profile) {
+      privateWarning("Chat is not connected.");
+      return;
+    }
+
+    // Never show a popup before server authorization.
+    // A malformed ID gets the same generic response
+    // as an unrecognized command.
+    if (!UUID_PATTERN.test(targetId)) {
+      privateWarning("Invalid command");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "admin_find_chat_user",
+        {
+          p_target_account_id: targetId
+        }
+      );
+
+      if (error) {
+        privateWarning("Invalid command");
+        return;
+      }
+
+      // Authorization succeeded.
+      const user = Array.isArray(data) ? data[0] : data;
+
+      content.replaceChildren();
+
+      if (!user) {
+        content.textContent = "User not found.";
+        overlay.style.display = "flex";
+        return;
+      }
+
+      addResultRow("Username", user.nickname || "Unknown");
+      addResultRow("Account ID", user.account_id);
+      addResultRow(
+        "Status",
+        user.online_status === "Online" ? "Online" : "Offline"
+      );
+      addResultRow(
+        "Room",
+        user.online_status === "Online"
+          ? (user.room_name || "Unknown")
+          : "None"
+      );
+      addResultRow(
+        "Room Type",
+        user.online_status === "Online"
+          ? (
+              user.room_type === "private"
+                ? "Private"
+                : "Public"
+            )
+          : "None"
+      );
+
+      overlay.style.display = "flex";
+
+    } catch (error) {
+      console.warn("[Find] Request failed:", error);
+      privateWarning("Invalid command");
+    }
+  }
+
+  // Intercept only /find.
+  // Every other command continues working unchanged.
+  handleCommand = async function(content) {
+    const match = content.match(
+      /^\/find(?:\s+(.*))?$/i
+    );
+
+    if (match) {
+      await findUser((match[1] || "").trim());
+      return;
+    }
+
+    return previousHandleCommand(content);
+  };
+
+  console.log(
+    "[SolarEraser Chat] Step 115C /find loaded!"
+  );
+})();
