@@ -1,0 +1,102 @@
+
+name: Publish SolarEraser Chat
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: solareraser-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Prepare versioned website
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${GITHUB_SHA:0:12}"
+
+          mkdir -p _site
+
+          cp index.html main.js style.css _site/
+
+          printf '{\n  "version": "%s"\n}\n' \
+            "$VERSION" > _site/version.json
+
+          python3 - "$VERSION" <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          version = sys.argv[1]
+          path = pathlib.Path("_site/index.html")
+          html = path.read_text(encoding="utf-8")
+
+          for filename in ("main.js", "style.css"):
+              pattern = (
+                  r'(["\'])' +
+                  re.escape(filename) +
+                  r'(?:\?[^"\']*)?\1'
+              )
+
+              replacement = (
+                  lambda match:
+                  match.group(1) +
+                  filename +
+                  "?v=" + version +
+                  match.group(1)
+              )
+
+              html, count = re.subn(
+                  pattern,
+                  replacement,
+                  html
+              )
+
+              if count != 1:
+                  raise RuntimeError(
+                      f"Expected one reference to {filename}, "
+                      f"found {count}"
+                  )
+
+          path.write_text(html, encoding="utf-8")
+          PY
+
+          touch _site/.nojekyll
+
+      - name: Publish to generated branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd _site
+
+          git init
+          git checkout -b chat-published
+
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          git commit -m "Publish ${GITHUB_SHA:0:12}"
+
+          git remote add origin \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          git push --force origin HEAD:chat-published
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
