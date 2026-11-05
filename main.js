@@ -4040,3 +4040,124 @@ line.dataset.solarWelcome = "true";
     "[Step 123B] Mobile long-press IDs installed!"
   );
 })();
+
+/*
+  STEP 124H — /admin_authority
+
+  /admin_authority USER_ID
+    Grants admin authority.
+
+  /admin_authority remove USER_ID
+    Removes admin authority.
+
+  Database verifies all permissions.
+  Existing commands remain unchanged.
+*/
+
+(function installAdminAuthorityCommand() {
+  const UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  let authorityBusy = false;
+
+  async function runAdminAuthority(rawArgs) {
+    if (!supabase || !profile) {
+      privateWarning("Chat is not connected.");
+      return;
+    }
+
+    // Check staff access before revealing usage.
+    const { error: staffError } = await supabase.rpc(
+      "get_admin_active_rooms"
+    );
+
+    if (staffError) {
+      privateWarning("Invalid command");
+      return;
+    }
+
+    const args = rawArgs.trim().split(/\s+/);
+
+    let grant = true;
+    let targetId = "";
+
+    if (args[0]?.toLowerCase() === "remove") {
+      grant = false;
+      targetId = args[1] || "";
+
+      if (args.length !== 2) targetId = "";
+    } else {
+      targetId = args[0] || "";
+
+      if (args.length !== 1) targetId = "";
+    }
+
+    if (!UUID_PATTERN.test(targetId)) {
+      privateWarning(
+        "Usage: /admin_authority USER_ID " +
+        "or /admin_authority remove USER_ID"
+      );
+      return;
+    }
+
+    if (authorityBusy) return;
+    authorityBusy = true;
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "set_chat_admin_authority",
+        {
+          p_target_account_id: targetId,
+          p_grant: grant
+        }
+      );
+
+      if (error) {
+        if (
+          error.message === "Permission denied" ||
+          error.message === "Not authenticated"
+        ) {
+          privateWarning("Invalid command");
+        } else {
+          privateWarning(
+            "Admin authority failed: " + error.message
+          );
+        }
+        return;
+      }
+
+      privateWarning(
+        data || "Admin authority updated successfully."
+      );
+
+      scheduleGlowRefresh();
+
+    } catch (error) {
+      privateWarning(
+        "Admin authority failed: " + error.message
+      );
+
+    } finally {
+      authorityBusy = false;
+    }
+  }
+
+  const previousHandleCommand = handleCommand;
+
+  handleCommand = async function(content) {
+    const match = content.match(
+      /^\/admin_authority(?:\s+(.*))?$/i
+    );
+
+    if (match) {
+      await runAdminAuthority(match[1] || "");
+      return;
+    }
+
+    return previousHandleCommand(content);
+  };
+
+  console.log(
+    "[SolarEraser Chat] Step 124H /admin_authority loaded!"
+  );
+})();
