@@ -3914,3 +3914,129 @@ line.dataset.solarWelcome = "true";
     "[Step 122A] Input hint and connection screen installed!"
   );
 })();
+
+/*
+  STEP 123B — Mobile long-press account IDs
+
+  Tap: existing nickname behavior.
+  Hold: copy and append account ID.
+  Works in user list and chat messages.
+*/
+
+(function installMobileLongPressIDs() {
+  const HOLD_MS = 500;
+
+  let holdTimer = null;
+  let holdTarget = null;
+  let holdStartX = 0;
+  let holdStartY = 0;
+  let suppressClick = false;
+
+  const SELECTOR =
+    ".right .name[data-account-id], " +
+    ".messages .nick[data-account-id]";
+
+  function cancelHold() {
+    clearTimeout(holdTimer);
+    holdTimer = null;
+  }
+
+  function getName(target) {
+    return target.closest?.(SELECTOR);
+  }
+
+  document.addEventListener("pointerdown", event => {
+    if (event.pointerType !== "touch") return;
+
+    const name = getName(event.target);
+    if (!name) return;
+
+    cancelHold();
+
+    holdTarget = name;
+    holdStartX = event.clientX;
+    holdStartY = event.clientY;
+    suppressClick = false;
+
+    holdTimer = setTimeout(async () => {
+      holdTimer = null;
+
+      if (!holdTarget || !holdTarget.isConnected) return;
+
+      const id = holdTarget.dataset.accountId;
+      if (!id) return;
+
+      suppressClick = true;
+
+      // Preserve existing text.
+      const existing = sendArea.value;
+      const separator =
+        existing && !/\s$/.test(existing) ? " " : "";
+
+      sendArea.value = existing + separator + id;
+
+      // Copy the account ID.
+      try {
+        await navigator.clipboard.writeText(id);
+      } catch (error) {
+        console.warn("[Long press copy]", error);
+      }
+
+      // Avoid forcing the mobile keyboard open.
+      privateWarning("Account ID copied.");
+    }, HOLD_MS);
+  }, true);
+
+  document.addEventListener("pointermove", event => {
+    if (!holdTimer) return;
+
+    const distanceX = Math.abs(
+      event.clientX - holdStartX
+    );
+
+    const distanceY = Math.abs(
+      event.clientY - holdStartY
+    );
+
+    // Scrolling should cancel a pending hold.
+    if (distanceX > 12 || distanceY > 12) {
+      cancelHold();
+    }
+  }, true);
+
+  document.addEventListener("pointerup", cancelHold, true);
+  document.addEventListener("pointercancel", cancelHold, true);
+
+  // Stop the normal nickname click after a long hold.
+  document.addEventListener("click", event => {
+    if (!suppressClick) return;
+
+    const name = getName(event.target);
+    if (!name) return;
+
+    suppressClick = false;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+
+  // Prevent mobile text selection on usernames.
+  const style = document.createElement("style");
+
+  style.textContent = `
+    @media (pointer: coarse) {
+      .right .name[data-account-id],
+      .messages .nick[data-account-id] {
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        touch-action: pan-y;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  console.log(
+    "[Step 123B] Mobile long-press IDs installed!"
+  );
+})();
