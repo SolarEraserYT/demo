@@ -2911,19 +2911,22 @@ console.log(
       privateWarning("Chat is not connected.");
       return;
     }
-
-    content.textContent = "Loading rooms...";
-    overlay.style.display = "flex";
-
     try {
       const { data, error } = await supabase.rpc(
         "get_admin_active_rooms"
       );
 
-      if (error) throw error;
+      if (error) {
+        privateWarning("Invalid command");
+        return;
+      }
 
       const rooms = Array.isArray(data) ? data : [];
+
+      // Only show the popup AFTER Supabase
+      // has successfully authorized the request.
       content.replaceChildren();
+      overlay.style.display = "flex";
 
       if (!rooms.length) {
         content.textContent = "No active rooms.";
@@ -2971,11 +2974,9 @@ console.log(
       footer.append(totalRooms, total);
       content.appendChild(footer);
 
-    } catch (error) {
-      overlay.style.display = "none";
-      privateWarning(
-        "/rooms failed: " + error.message
-      );
+       } catch (error) {
+      console.warn("[Rooms] Request failed:", error);
+      privateWarning("Invalid command");
     }
   }
 
