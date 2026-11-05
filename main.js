@@ -3332,3 +3332,92 @@ if (type === "ban") {
     "[SolarEraser Chat] Step 117O /ban loaded!"
   );
 })();
+
+/*
+  STEP 118C — Silent /unban command
+  Global staff only.
+  Preserves all existing commands.
+*/
+
+(function installUnbanCommand() {
+  const UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  let unbanning = false;
+
+  async function unbanUser(targetId) {
+    if (!supabase || !profile) {
+      privateWarning("Chat is not connected.");
+      return;
+    }
+
+    // Verify global staff authorization first.
+    const { error: staffError } = await supabase.rpc(
+      "get_admin_active_rooms"
+    );
+
+    if (staffError) {
+      privateWarning("Invalid command");
+      return;
+    }
+
+    if (!UUID_PATTERN.test(targetId)) {
+      privateWarning("Usage: /unban USER_ID");
+      return;
+    }
+
+    if (unbanning) return;
+    unbanning = true;
+
+    try {
+      const { error } = await supabase.rpc(
+        "unban_chat_user",
+        {
+          p_target_account_id: targetId
+        }
+      );
+
+      if (error) {
+        if (error.message === "Invalid command") {
+          privateWarning("Invalid command");
+        } else {
+          privateWarning(
+            "Unban failed: " + error.message
+          );
+        }
+        return;
+      }
+
+      // Silent success: no SERVER announcement,
+      // no public message, no popup.
+      // The user can reconnect after refreshing.
+
+    } catch (error) {
+      privateWarning(
+        "Unban failed: " + error.message
+      );
+
+    } finally {
+      unbanning = false;
+    }
+  }
+
+  const previousHandleCommand = handleCommand;
+
+  handleCommand = async function(content) {
+    const match = content.match(
+      /^\/unban(?:\s+(.*))?$/i
+    );
+
+    if (match) {
+      await unbanUser((match[1] || "").trim());
+      return;
+    }
+
+    return previousHandleCommand(content);
+  };
+
+  console.log(
+    "[SolarEraser Chat] Step 118C /unban loaded!"
+  );
+})();
