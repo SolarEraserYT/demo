@@ -2779,4 +2779,59 @@ console.log(
   );
 })();
 
+// ==================================================
+// STEP 114N — Live presence heartbeat for /rooms
+// ==================================================
 
+(function installChatLivePresenceHeartbeat() {
+  let heartbeatRunning = false;
+
+  async function sendPresenceHeartbeat() {
+    if (
+      !supabase ||
+      !profile ||
+      !currentRoomId ||
+      !channel ||
+      switching ||
+      heartbeatRunning
+    ) {
+      return;
+    }
+
+    // Only report presence while our Realtime
+    // channel is successfully connected.
+    if (channel.state !== "joined") return;
+
+    heartbeatRunning = true;
+
+    const roomId = String(currentRoomId);
+
+    try {
+      const { error } = await supabase.rpc(
+        "heartbeat_chat_presence",
+        { p_room_id: roomId }
+      );
+
+      if (error) throw error;
+
+    } catch (error) {
+      console.warn(
+        "[Rooms] Presence heartbeat failed:",
+        error.message
+      );
+
+    } finally {
+      heartbeatRunning = false;
+    }
+  }
+
+  // Update every 15 seconds.
+  setInterval(sendPresenceHeartbeat, 15000);
+
+  // First heartbeat shortly after connecting.
+  setTimeout(sendPresenceHeartbeat, 3000);
+
+  console.log(
+    "[SolarEraser Chat] Step 114N heartbeat loaded!"
+  );
+})();
