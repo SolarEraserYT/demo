@@ -2439,6 +2439,12 @@ if (type === "ban") {
   continue;
 }
 
+        // Ban events must be handled by the existing
+        // ban listener, not treated as an untimeout.
+        if (type === "ban") {
+          continue;
+        }
+
         const sourceRoom = String(
           event.source_room_id || ""
         );
