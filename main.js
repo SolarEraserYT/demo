@@ -1752,7 +1752,26 @@ async function startChat() {
     if (!profile?.nickname || !profile?.account_id) {
       throw new Error("Chat profile not found.");
     }
+// STEP 117L-3 — Check account ban status on startup.
+const { data: banStatus, error: banStatusError } =
+  await supabase.rpc("my_chat_ban_status");
 
+if (banStatusError) {
+  throw banStatusError;
+}
+
+if (banStatus === true) {
+  chatAccountBanned = true;
+
+  setInputReady(false);
+  setStatus("This account has been banned.", true);
+
+  privateWarning(
+    "Your account has been banned from SolarEraser Chat."
+  );
+
+  return;
+}
     const {
       data: glowData,
       error: glowError
