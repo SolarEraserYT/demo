@@ -3250,3 +3250,85 @@ if (type === "ban") {
     "[SolarEraser Chat] Step 115C /find loaded!"
   );
 })();
+
+/*
+  STEP 117O — Global staff /ban command
+  Preserves all existing commands.
+*/
+
+(function installBanCommand() {
+  const UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  let banning = false;
+
+  async function banUser(targetId) {
+    if (!supabase || !profile) {
+      privateWarning("Chat is not connected.");
+      return;
+    }
+
+    // Verify staff permissions on the server before
+    // revealing command-specific usage or errors.
+    const { data: staffData, error: staffError } =
+      await supabase.rpc("get_admin_active_rooms");
+
+    if (staffError) {
+      privateWarning("Invalid command");
+      return;
+    }
+
+    if (!UUID_PATTERN.test(targetId)) {
+      privateWarning("Usage: /ban USER_ID");
+      return;
+    }
+
+    if (banning) return;
+    banning = true;
+
+    try {
+      const { error } = await supabase.rpc(
+        "ban_chat_user",
+        {
+          p_target_account_id: targetId
+        }
+      );
+
+      if (error) {
+        if (error.message === "Invalid command") {
+          privateWarning("Invalid command");
+        } else {
+          privateWarning("Ban failed: " + error.message);
+        }
+        return;
+      }
+
+      scheduleGlowRefresh();
+
+    } catch (error) {
+      privateWarning("Ban failed: " + error.message);
+
+    } finally {
+      banning = false;
+    }
+  }
+
+  const previousHandleCommand = handleCommand;
+
+  handleCommand = async function(content) {
+    const match = content.match(
+      /^\/ban(?:\s+(.*))?$/i
+    );
+
+    if (match) {
+      await banUser((match[1] || "").trim());
+      return;
+    }
+
+    return previousHandleCommand(content);
+  };
+
+  console.log(
+    "[SolarEraser Chat] Step 117O /ban loaded!"
+  );
+})();
