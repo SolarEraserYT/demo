@@ -3733,3 +3733,55 @@ line.dataset.solarWelcome = "true";
     "[Step 121B] Three scrolling room topics installed!"
   );
 })();
+
+/*
+  STEP 121C — Move scrolling topic into toolbar
+
+  Keep existing room topics and animation.
+  Use a dark blue background.
+*/
+
+(function moveScrollingTopicToToolbar() {
+  const topicBar = document.getElementById(
+    "solar-room-topic"
+  );
+
+  const settingsButton = document.querySelector(
+    '.menu_button[data-target="settings"]'
+  );
+
+  if (!topicBar || !settingsButton) {
+    console.warn(
+      "[Step 121C] Topic bar or settings button missing."
+    );
+    return;
+  }
+
+  const toolbar = settingsButton.parentElement;
+
+  // Place topic alongside the toolbar controls.
+  toolbar.appendChild(topicBar);
+
+  // Make toolbar items sit side by side.
+  toolbar.style.display = "flex";
+  toolbar.style.alignItems = "center";
+
+  // Allow topic to occupy remaining toolbar width.
+  topicBar.style.flex = "1 1 0";
+  topicBar.style.minWidth = "0";
+  topicBar.style.width = "auto";
+  topicBar.style.height = "24px";
+  topicBar.style.marginLeft = "12px";
+
+  // Darker blue than the main chat background.
+  topicBar.style.background = "#0c1323";
+  topicBar.style.border = "1px solid #202c46";
+  topicBar.style.borderRadius = "4px";
+
+  // Keep the existing pink scrolling text.
+  topicBar.style.color = "#ff76ca";
+
+  console.log(
+    "[Step 121C] Topic moved into toolbar!"
+  );
+})();
