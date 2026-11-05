@@ -3427,3 +3427,71 @@ if (type === "ban") {
     "[SolarEraser Chat] Step 118C /unban loaded!"
   );
 })();
+
+/*
+  STEP 119A — Clickable chat usernames
+
+  Normal click: copy and append nickname.
+  Shift-click: copy and append account ID.
+  Works on old messages, even after users leave.
+*/
+
+(function installChatUsernameClicks() {
+  messages.addEventListener("click", async event => {
+    const name = event.target.closest(
+      ".nick[data-account-id]"
+    );
+
+    if (!name || !messages.contains(name)) {
+      return;
+    }
+
+    const value = event.shiftKey
+      ? name.dataset.accountId
+      : name.textContent;
+
+    if (!value) return;
+
+    // Keep existing text in the message input.
+    const existing = sendArea.value;
+
+    const separator =
+      existing.length > 0 && !/\s$/.test(existing)
+        ? " "
+        : "";
+
+    sendArea.value = existing + separator + value;
+
+    sendArea.focus();
+    sendArea.setSelectionRange(
+      sendArea.value.length,
+      sendArea.value.length
+    );
+
+    // Copy nickname or account ID.
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch (error) {
+      console.warn("[Chat username copy]", error);
+    }
+  });
+
+  // Show users that chat usernames are clickable.
+  const style = document.createElement("style");
+
+  style.textContent = `
+    .messages .nick[data-account-id] {
+      cursor: pointer;
+    }
+
+    .messages .nick[data-account-id]:hover {
+      text-decoration: underline;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  console.log(
+    "[Step 119A] Chat usernames are clickable!"
+  );
+})();
