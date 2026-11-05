@@ -640,13 +640,7 @@ async function joinRoom(roomName, roomType = "public") {
       throw new Error("No room ID returned.");
     }
 
-    // Capture the SERVER cursor immediately after joining.
-    const { data: announcementCursor, error: cursorError } =
-      await supabase.rpc("get_chat_server_announcement_cursor", {
-        p_room_id: roomId
-      });
-
-    if (cursorError) throw cursorError;
+   
 
     await leaveChannel();
     messages.replaceChildren();
@@ -734,17 +728,9 @@ async function joinRoom(roomName, roomType = "public") {
       return false;
     }
 
-        currentRoom = roomName;
+    currentRoom = roomName;
     currentRoomId = roomId;
     currentRoomType = roomType;
-
-    // Step 113C-3: Register this room's SERVER session.
-    serverAnnouncementSession = {
-      roomId: String(roomId),
-      cursor: Number(announcementCursor) || 0,
-      generation: attempt
-    };
-
     updateRoomSelector();
     setInputReady(true);
 
@@ -2690,39 +2676,60 @@ console.log(
   Room-session-aware SERVER announcement listener
 */
 
+
+/*
+  SolarEraser Chat — Step 113C-2
+  Database-cursor SERVER announcement listener
+*/
 (function installServerAnnouncementListener() {
-  let trackedGeneration = null;
+  let trackedRoomId = null;
   let lastAnnouncementId = 0;
+  let initialized = false;
   let checking = false;
+  let generation = 0;
 
   async function checkServerAnnouncements() {
     if (
       !supabase ||
       !currentRoomId ||
       switching ||
-      !serverAnnouncementSession ||
       typeof window.solarRenderServerAnnouncement !== "function"
-    ) {
-      return;
-    }
+    ) return;
 
-    const session = serverAnnouncementSession;
     const roomId = String(currentRoomId);
 
-    if (session.roomId !== roomId) return;
-
-    // A new join always starts a new announcement session.
-    if (trackedGeneration !== session.generation) {
-      trackedGeneration = session.generation;
-      lastAnnouncementId = session.cursor;
+    if (trackedRoomId !== roomId) {
+      trackedRoomId = roomId;
+      lastAnnouncementId = 0;
+      initialized = false;
+      generation++;
     }
 
     if (checking) return;
     checking = true;
 
-    const requestGeneration = session.generation;
+    const requestGeneration = generation;
 
     try {
+      if (!initialized) {
+        const { data, error } = await supabase.rpc(
+          "get_chat_server_announcement_cursor",
+          { p_room_id: roomId }
+        );
+
+        if (error) throw error;
+
+        if (
+          switching ||
+          String(currentRoomId) !== roomId ||
+          requestGeneration !== generation
+        ) return;
+
+        lastAnnouncementId = Number(data) || 0;
+        initialized = true;
+        return;
+      }
+
       const { data, error } = await supabase.rpc(
         "get_chat_server_announcements",
         {
@@ -2733,15 +2740,11 @@ console.log(
 
       if (error) throw error;
 
-      // Ignore results from a previous room session.
       if (
         switching ||
         String(currentRoomId) !== roomId ||
-        !serverAnnouncementSession ||
-        serverAnnouncementSession.generation !== requestGeneration
-      ) {
-        return;
-      }
+        requestGeneration !== generation
+      ) return;
 
       for (const announcement of data || []) {
         const id = Number(announcement.id);
@@ -2772,7 +2775,8 @@ console.log(
   setTimeout(checkServerAnnouncements, 500);
 
   console.log(
-    "[SolarEraser Chat] Step 113C-3 listener loaded!"
+    "[SolarEraser Chat] Step 113C cursor listener loaded!"
   );
 })();
+
 
