@@ -2360,12 +2360,13 @@ console.log(
         const type = event.event_type;
 
         if (
-          type !== "kick" &&
-          type !== "timeout" &&
-          type !== "untimeout"
-        ) {
-          continue;
-        }
+  type !== "kick" &&
+  type !== "timeout" &&
+  type !== "untimeout" &&
+  type !== "ban"
+) {
+  continue;
+}
 
         const sourceRoom = String(
           event.source_room_id || ""
