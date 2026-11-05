@@ -43,6 +43,7 @@ let busy = false;
 let presenceWorking = false;
 let connectionNumber = 0;
 let verifiedOwner = false;
+let chatAccountBanned = false;
 
 // Step 113C-3: SERVER announcement room-session tracking.
 let serverAnnouncementSession = null;
@@ -584,7 +585,12 @@ setInterval(() => {
 // --------------------------------------------------
 
 async function joinRoom(roomName, roomType = "public") {
-  if (!supabase || !profile || switching) {
+  if (
+    chatAccountBanned ||
+    !supabase ||
+    !profile ||
+    switching
+  ) {
     return false;
   }
 
@@ -2118,7 +2124,53 @@ console.log(
         if (switching) break;
 
         const type = event.event_type;
+if (type === "ban") {
+  chatAccountBanned = true;
 
+  // Invalidate any pending room connection.
+  connectionNumber++;
+
+  // Disconnect from the current chat room.
+  try {
+    await leaveChannel();
+  } catch (error) {
+    console.warn("[Ban] Disconnect:", error);
+  }
+
+  currentRoom = null;
+  currentRoomId = null;
+  currentRoomType = null;
+  presenceWorking = false;
+
+  userNames.replaceChildren();
+  messages.replaceChildren();
+
+  // Prevent further messages and room changes.
+  setInputReady(false);
+  sendArea.placeholder = "Account banned";
+  roomSelector.disabled = true;
+
+  setStatus("This account has been banned.", true);
+
+  privateWarning(
+    "Your account has been banned from SolarEraser Chat."
+  );
+
+  // Mark the private moderation event as processed.
+  const { error: ackError } = await supabase.rpc(
+    "ack_chat_mod_event",
+    { p_event_id: event.event_id }
+  );
+
+  if (ackError) {
+    console.warn(
+      "[Ban] Could not acknowledge event:",
+      ackError.message
+    );
+  }
+
+  break;
+}
         // Leave kick events for the existing
         // Step 109E kick listener.
         if (
