@@ -4161,3 +4161,168 @@ line.dataset.solarWelcome = "true";
     "[SolarEraser Chat] Step 124H /admin_authority loaded!"
   );
 })();
+
+/*
+  STEP 125B — SOLARERASER CHAT UPDATE NOTIFIER
+
+  Checks version.json every 30 seconds.
+  Shows a top-right popup when a new version
+  becomes available.
+
+  Does not automatically refresh the page.
+*/
+
+(function installUpdateNotifier() {
+  const VERSION_URL = "./version.json";
+  const CHECK_INTERVAL = 30000;
+
+  let currentVersion = null;
+  let updateAvailable = false;
+  let checking = false;
+
+  const notification = document.createElement("div");
+
+  notification.id = "solar-update-notification";
+
+  notification.style.cssText = [
+    "position:fixed",
+    "top:15px",
+    "right:15px",
+    "z-index:99999",
+    "width:min(310px,calc(100vw - 30px))",
+    "box-sizing:border-box",
+    "background:#171a24",
+    "border:1px solid #7774e8",
+    "border-radius:8px",
+    "padding:13px",
+    "color:#f1f1f7",
+    "font:13px Arial,sans-serif",
+    "box-shadow:0 6px 25px #0009",
+    "display:none"
+  ].join(";");
+
+  const heading = document.createElement("div");
+
+  heading.textContent = "🔄 New version available!";
+
+  heading.style.cssText =
+    "font-weight:bold;color:#ff76ca;" +
+    "font-size:14px;margin-bottom:8px;";
+
+  const description = document.createElement("div");
+
+  description.textContent =
+    "A new version of SolarEraser Chat is available. " +
+    "Refresh to get the latest features.";
+
+  description.style.cssText =
+    "line-height:1.5;margin-bottom:12px;";
+
+  const refreshButton = document.createElement("button");
+
+  refreshButton.textContent = "Refresh";
+
+  refreshButton.style.cssText =
+    "background:#7774e8;color:white;border:0;" +
+    "border-radius:5px;padding:7px 15px;" +
+    "font-weight:bold;cursor:pointer;";
+
+  const actions = document.createElement("div");
+
+  actions.style.cssText =
+    "display:flex;justify-content:flex-end;";
+
+  actions.appendChild(refreshButton);
+
+  notification.append(
+    heading,
+    description,
+    actions
+  );
+
+  document.body.appendChild(notification);
+
+  refreshButton.addEventListener("click", () => {
+    // Reload with a unique URL to bypass page caching.
+    const url = new URL(window.location.href);
+
+    url.searchParams.set(
+      "v",
+      String(Date.now())
+    );
+
+    window.location.replace(url.toString());
+  });
+
+  async function checkForUpdates() {
+    if (checking || updateAvailable) return;
+
+    checking = true;
+
+    try {
+      const response = await fetch(
+        VERSION_URL + "?t=" + Date.now(),
+        {
+          cache: "no-store"
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Version check failed: " + response.status
+        );
+      }
+
+      const data = await response.json();
+
+      const latestVersion = String(
+        data.version || ""
+      ).trim();
+
+      if (!latestVersion) return;
+
+      if (currentVersion === null) {
+        currentVersion = latestVersion;
+
+        console.log(
+          "[Updates] Current version:",
+          currentVersion
+        );
+
+        return;
+      }
+
+      if (latestVersion !== currentVersion) {
+        updateAvailable = true;
+
+        notification.style.display = "block";
+
+        console.log(
+          "[Updates] New version detected:",
+          latestVersion
+        );
+      }
+
+    } catch (error) {
+      console.warn(
+        "[Updates] Could not check version:",
+        error.message
+      );
+
+    } finally {
+      checking = false;
+    }
+  }
+
+  // Check immediately, then every 30 seconds.
+  checkForUpdates();
+
+  setInterval(
+    checkForUpdates,
+    CHECK_INTERVAL
+  );
+
+  console.log(
+    "[SolarEraser Chat] Step 125B update notifier loaded!"
+  );
+})();
