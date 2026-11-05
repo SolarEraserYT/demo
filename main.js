@@ -2835,3 +2835,160 @@ console.log(
     "[SolarEraser Chat] Step 114N heartbeat loaded!"
   );
 })();
+// ==================================================
+// STEP 114O — Admin-only /rooms popup
+// ==================================================
+
+(function installAdminRoomsCommand() {
+  const previousHandleCommand = handleCommand;
+
+  // Create popup.
+  const overlay = document.createElement("div");
+  overlay.style.cssText = [
+    "position:fixed",
+    "inset:0",
+    "z-index:100000",
+    "background:rgba(0,0,0,.65)",
+    "display:none",
+    "align-items:center",
+    "justify-content:center",
+    "padding:16px"
+  ].join(";");
+
+  const popup = document.createElement("div");
+  popup.style.cssText = [
+    "background:#202431",
+    "color:#e9eaf5",
+    "border:1px solid #41475c",
+    "border-radius:8px",
+    "padding:18px",
+    "width:min(420px,100%)",
+    "max-height:75vh",
+    "overflow-y:auto",
+    "font:13px Arial,sans-serif"
+  ].join(";");
+
+  const heading = document.createElement("div");
+  heading.style.cssText =
+    "display:flex;justify-content:space-between;" +
+    "align-items:center;margin-bottom:14px;";
+
+  const title = document.createElement("strong");
+  title.textContent = "Active Rooms";
+  title.style.fontSize = "16px";
+
+  const closeButton = document.createElement("button");
+  closeButton.textContent = "✕";
+  closeButton.style.cssText =
+    "background:none;border:0;color:#aaa;" +
+    "font-size:18px;cursor:pointer;";
+
+  closeButton.addEventListener("click", () => {
+    overlay.style.display = "none";
+  });
+
+  heading.append(title, closeButton);
+
+  const content = document.createElement("div");
+  popup.append(heading, content);
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener("click", event => {
+    if (event.target === overlay) {
+      overlay.style.display = "none";
+    }
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      overlay.style.display = "none";
+    }
+  });
+
+  async function showActiveRooms() {
+    if (!supabase || !profile) {
+      privateWarning("Chat is not connected.");
+      return;
+    }
+
+    content.textContent = "Loading rooms...";
+    overlay.style.display = "flex";
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "get_admin_active_rooms"
+      );
+
+      if (error) throw error;
+
+      const rooms = Array.isArray(data) ? data : [];
+      content.replaceChildren();
+
+      if (!rooms.length) {
+        content.textContent = "No active rooms.";
+        return;
+      }
+
+      let totalUsers = 0;
+
+      for (const room of rooms) {
+        const count = Number(room.online_users) || 0;
+        totalUsers += count;
+
+        const row = document.createElement("div");
+        row.style.cssText =
+          "display:flex;justify-content:space-between;" +
+          "gap:12px;padding:10px 0;" +
+          "border-bottom:1px solid #353a4b;";
+
+        const roomName = document.createElement("span");
+        roomName.textContent =
+          (room.room_type === "private" ? "🔒 " : "🌐 ") +
+          room.room_name;
+
+        const users = document.createElement("span");
+        users.style.whiteSpace = "nowrap";
+        users.style.color = "#aaaec7";
+        users.textContent =
+          count + (count === 1 ? " user" : " users");
+
+        row.append(roomName, users);
+        content.appendChild(row);
+      }
+
+      const footer = document.createElement("div");
+      footer.style.cssText =
+        "margin-top:14px;font-weight:bold;" +
+        "display:flex;justify-content:space-between;gap:10px;";
+
+      const totalRooms = document.createElement("span");
+      totalRooms.textContent = rooms.length + " active rooms";
+
+      const total = document.createElement("span");
+      total.textContent = totalUsers + " users";
+
+      footer.append(totalRooms, total);
+      content.appendChild(footer);
+
+    } catch (error) {
+      overlay.style.display = "none";
+      privateWarning(
+        "/rooms failed: " + error.message
+      );
+    }
+  }
+
+  handleCommand = async function(content) {
+    if (/^\/rooms(?:\s*)$/i.test(content)) {
+      await showActiveRooms();
+      return;
+    }
+
+    return previousHandleCommand(content);
+  };
+
+  console.log(
+    "[SolarEraser Chat] Step 114O /rooms loaded!"
+  );
+})();
