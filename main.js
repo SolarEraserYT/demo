@@ -125,7 +125,9 @@ function cooldownWarning(seconds) {
 leftPanel.style.display = "none";
 
 layout.style.gridTemplateColumns =
-  "minmax(0, 1fr) minmax(150px, 210px)";
+  window.innerWidth <= 760
+    ? "minmax(0, 7fr) minmax(0, 3fr)"
+    : "minmax(0, 1fr) minmax(150px, 210px)";
 
 layout.style.gridTemplateAreas = '"center right"';
 
