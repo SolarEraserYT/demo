@@ -3495,3 +3495,113 @@ if (type === "ban") {
     "[Step 119A] Chat usernames are clickable!"
   );
 })();
+
+/*
+  STEP 120B — SolarEraser Chat welcome messages
+
+  Pink: welcome
+  Green: instructions
+  Yellow: safety reminder
+
+  Displayed once per room entry.
+  Scrolls naturally with chat messages.
+*/
+
+(function installWelcomeMessages() {
+  const originalJoinRoom = joinRoom;
+
+  const welcomeLines = [
+    {
+      color: "#ff76ca",
+      text: "Welcome to SolarEraser Chat!"
+    },
+    {
+      color: "#60df73",
+      text: "Type /help to see available commands."
+    },
+    {
+      color: "#60df73",
+      text: "To change your nickname, type /nick followed by your new name."
+    },
+    {
+      color: "#60df73",
+      text: "To join a private room, type /join followed by the room name."
+    },
+    {
+      color: "#ffd447",
+      text: "Please respect other users and avoid sharing personal information."
+    }
+  ];
+
+  function showWelcomeMessages() {
+    if (chatAccountBanned || !currentRoomId) return;
+
+    const time = new Date().toLocaleTimeString(
+      "en-GB",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }
+    );
+
+    const fragment = document.createDocumentFragment();
+
+    for (const item of welcomeLines) {
+      const line = document.createElement("div");
+      line.className = "message_item";
+
+      const content = document.createElement("span");
+      content.className = "message";
+      content.style.color = item.color;
+      content.textContent = "[" + time + "] " + item.text;
+
+      line.appendChild(content);
+      fragment.appendChild(line);
+    }
+
+    messages.prepend(fragment);
+  }
+
+  joinRoom = async function(...args) {
+    const previousRoomId = currentRoomId;
+    const result = await originalJoinRoom(...args);
+
+    if (
+      result === true &&
+      currentRoomId &&
+      currentRoomId !== previousRoomId
+    ) {
+      showWelcomeMessages();
+    }
+
+    return result;
+  };
+
+  // Startup can begin before this block is installed.
+  // Detect the initial room connection as well.
+  let initialWelcomeShown = false;
+
+  const initialCheck = setInterval(() => {
+    if (initialWelcomeShown || chatAccountBanned) {
+      clearInterval(initialCheck);
+      return;
+    }
+
+    if (currentRoomId && channel && !switching) {
+      initialWelcomeShown = true;
+      clearInterval(initialCheck);
+
+      // Avoid displaying twice if the join wrapper
+      // already inserted the welcome messages.
+      if (!messages.querySelector(
+        '[data-solar-welcome="true"]'
+      )) {
+        showWelcomeMessages();
+      }
+    }
+  }, 250);
+
+  console.log("[Step 120B] Welcome messages loaded!");
+})();
