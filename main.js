@@ -3551,7 +3551,7 @@ if (type === "ban") {
     for (const item of welcomeLines) {
       const line = document.createElement("div");
       line.className = "message_item";
-
+line.dataset.solarWelcome = "true";
       const content = document.createElement("span");
       content.className = "message";
       content.style.color = item.color;
