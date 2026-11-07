@@ -298,7 +298,7 @@ function displayMessage(data) {
 
   const nick = document.createElement("span");
   nick.className = "nick";
-  nick.textContent = String(data.nickname || "Guest");
+  nick.textContent = "[" + String(data.nickname || "Guest") + "]";
 
   applyGlow(
     nick,
