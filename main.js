@@ -276,6 +276,7 @@ function scheduleGlowRefresh() {
 // MESSAGES
 // --------------------------------------------------
 
+
 function displayMessage(data) {
   if (
     !data ||
@@ -296,9 +297,54 @@ function displayMessage(data) {
     }
   );
 
+  // Convert a level into Roman numerals.
+  function toRoman(number) {
+    let n = Math.floor(Number(number));
+
+    if (!Number.isFinite(n) || n < 1) {
+      n = 1;
+    }
+
+    const values = [
+      [1000, "M"],
+      [900, "CM"],
+      [500, "D"],
+      [400, "CD"],
+      [100, "C"],
+      [90, "XC"],
+      [50, "L"],
+      [40, "XL"],
+      [10, "X"],
+      [9, "IX"],
+      [5, "V"],
+      [4, "IV"],
+      [1, "I"]
+    ];
+
+    let result = "";
+
+    for (const [value, symbol] of values) {
+      while (n >= value) {
+        result += symbol;
+        n -= value;
+      }
+    }
+
+    return result;
+  }
+
+  const level = document.createElement("span");
+  level.className = "chat-level";
+  level.textContent =
+    "[" + toRoman(data.level) + "]";
+
+  level.style.color = "#609dff";
+
   const nick = document.createElement("span");
   nick.className = "nick";
-  nick.textContent = "[" + String(data.nickname || "Guest") + "]";
+
+  nick.textContent =
+    "[" + String(data.nickname || "Guest") + "]";
 
   applyGlow(
     nick,
@@ -310,7 +356,7 @@ function displayMessage(data) {
   content.className = "message";
   content.textContent = data.content;
 
-  line.append(time, nick, content);
+  line.append(time, level, nick, content);
   messages.appendChild(line);
   messages.scrollTop = messages.scrollHeight;
 
@@ -321,6 +367,7 @@ function displayMessage(data) {
     scheduleGlowRefresh();
   }
 }
+
 
 // --------------------------------------------------
 // PUBLIC ROOM SELECTOR
