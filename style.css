@@ -590,3 +590,10 @@ input[type="text"]:focus {
     background: transparent !important;
     border-color: transparent !important;
 }
+
+/* STEP 126C — Prevent username glow clipping */
+
+.right .name.chat-glow {
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
