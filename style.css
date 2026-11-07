@@ -1,0 +1,612 @@
+
+/* ========================================
+   CHAT V2 — MINIMAL DARK THEME
+   Blue / Purple Accent
+   ======================================== */
+
+:root {
+    color-scheme: dark;
+
+    --border-color: #c4c9dc;
+    --active-color: #a5a0ff;
+    --unread-color: #f5c879;
+
+    --modal-backgound: rgba(13, 15, 25, 0.94);
+
+    --button-background: #7774e8;
+    --input-background: #1b1e2b;
+
+    --font-familiy: Inter, "Segoe UI", Arial, sans-serif;
+
+    --bg-main: #11131b;
+    --bg-panel: #171a24;
+    --bg-hover: #222637;
+    --bg-input: #1b1e2b;
+    --border-subtle: #292d3d;
+    --text-main: #e7e9f3;
+    --text-muted: #858ba3;
+    --accent: #9185ff;
+    --accent-hover: #a49aff;
+}
+
+/* Reset */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+
+    color: var(--text-main);
+    background: var(--bg-main);
+
+    font-family: var(--font-familiy);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+*:focus {
+    outline: none;
+}
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    color: var(--text-main);
+    background: var(--button-background);
+    appearance: none;
+    transition:
+        background-color 0.15s ease,
+        opacity 0.15s ease,
+        transform 0.15s ease;
+}
+
+button:hover {
+    opacity: 1;
+    background: var(--accent-hover);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+button:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+input,
+input[type="text"] {
+    min-width: 0;
+    padding: 9px 11px;
+
+    color: var(--text-main);
+    background: var(--input-background);
+
+    border: 1px solid var(--border-subtle);
+    border-radius: 7px;
+
+    font-family: var(--font-familiy);
+    font-size: 14px;
+}
+
+input:focus,
+input[type="text"]:focus {
+    border-color: var(--accent);
+}
+
+::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
+/* Top toolbar */
+
+.top {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 0 12px;
+
+    background: var(--bg-panel);
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.menu_button {
+    float: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+    margin: 0;
+
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    background: transparent;
+}
+
+.menu_button:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-subtle);
+}
+
+.menu_button svg {
+    width: 19px;
+    height: 19px;
+}
+
+.menu_button svg path,
+.menu_button svg circle,
+.menu_button svg polygon {
+    fill: var(--text-muted);
+}
+
+.menu_button:hover svg path,
+.menu_button:hover svg circle,
+.menu_button:hover svg polygon {
+    fill: var(--accent);
+}
+
+/* Main three-column layout */
+
+.container {
+    height: calc(100% - 108px);
+    min-height: 0;
+
+    display: grid;
+    grid-template-columns: minmax(130px, 190px) minmax(0, 1fr)
+        minmax(150px, 210px);
+
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "left center right";
+
+    gap: 0;
+    overflow: hidden;
+}
+
+.left,
+.right,
+.center {
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Room sidebar */
+
+.left {
+    grid-area: left;
+    overflow-y: auto;
+    padding: 12px 8px;
+
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border-subtle);
+}
+
+/* User sidebar */
+
+.right {
+    grid-area: right;
+    overflow-y: auto;
+    padding: 12px 8px;
+
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border-subtle);
+}
+
+/* Scrollbars */
+
+.left,
+.right,
+.messages {
+    scrollbar-width: thin;
+    scrollbar-color: #373b50 transparent;
+}
+
+.left::-webkit-scrollbar,
+.right::-webkit-scrollbar,
+.messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.left::-webkit-scrollbar-thumb,
+.right::-webkit-scrollbar-thumb,
+.messages::-webkit-scrollbar-thumb {
+    background: #373b50;
+    border-radius: 8px;
+}
+
+/* Room and user items */
+
+.user_item,
+.room_item {
+    cursor: pointer;
+    min-width: 0;
+    margin-bottom: 3px;
+    padding: 7px 9px;
+
+    border-radius: 6px;
+    color: var(--text-muted);
+
+    font-size: 13px;
+    line-height: 1.5;
+
+    transition:
+        color 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.room_item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px;
+
+    font-size: 13px;
+}
+
+.room_item .name {
+    float: none !important;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.room_item .close {
+    float: none !important;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+
+    width: 22px;
+    height: 22px;
+    opacity: 0.55;
+}
+
+.room_item .close:hover {
+    opacity: 1;
+}
+
+.room_item .close svg {
+    width: 16px;
+    height: 16px;
+}
+
+.room_item:hover,
+.user_item:hover {
+    color: var(--text-main);
+    background: var(--bg-hover);
+}
+
+.room_item .name[style*="4, 221, 250"],
+.room_item .name[style*="165, 160, 255"] {
+    color: var(--active-color) !important;
+}
+
+/* Chat center */
+
+.center {
+    grid-area: center;
+    overflow: hidden;
+    position: relative;
+
+    background: var(--bg-main);
+    border: none;
+}
+
+.messages {
+    height: 100%;
+    overflow-y: auto;
+    padding: 18px 20px 22px;
+
+    overflow-wrap: anywhere;
+    word-break: normal;
+
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+/* Individual messages */
+
+.message_item {
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+}
+
+.message_item .time {
+    color: var(--text-muted);
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.message_item .nick {
+    margin-left: 5px;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.message_item .message {
+    margin-left: 7px !important;
+    color: var(--text-main);
+    overflow-wrap: anywhere;
+}
+
+/* Message input footer */
+
+.bottom {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    padding: 10px 14px;
+
+    background: var(--bg-panel);
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.send_area {
+    float: none;
+    flex: 1;
+    width: 0;
+    height: 40px;
+
+    padding: 0 13px !important;
+
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 8px;
+
+    background: var(--bg-input);
+    color: var(--text-main);
+
+    font-size: 14px;
+}
+
+.send_area:focus {
+    border-color: var(--accent) !important;
+}
+
+.send_button {
+    float: none;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+
+    padding: 0;
+    border-radius: 8px;
+
+    background: var(--button-background);
+}
+
+.send_button:hover {
+    background: var(--accent-hover);
+}
+
+.send_button svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Modal overlay */
+
+.modal {
+    display: none;
+    position: relative;
+    z-index: 10;
+    margin-top: 0;
+}
+
+.modal_background {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+
+    background: rgba(5, 6, 12, 0.76);
+    backdrop-filter: blur(3px);
+}
+
+.modal_content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 2;
+
+    width: min(360px, calc(100vw - 32px));
+    margin: 0 !important;
+    padding: 22px;
+
+    transform: translate(-50%, -50%);
+
+    color: var(--text-main);
+    background: #1a1d2a;
+
+    border: 1px solid #30344a;
+    border-radius: 12px;
+
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.4);
+}
+
+.modal_content input {
+    display: block;
+    width: 100%;
+    margin: 8px 0 12px;
+}
+
+.modal_content button {
+    padding: 9px 14px;
+
+    color: white;
+    background: var(--button-background);
+
+    border: none;
+    border-radius: 7px;
+}
+
+/* Responsive layout */
+
+@media (max-width: 760px) {
+    .container {
+        grid-template-columns: minmax(85px, 0.7fr) minmax(0, 3fr)
+            minmax(100px, 1fr);
+    }
+
+    .left,
+    .right {
+        padding: 8px 5px;
+    }
+
+    .messages {
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+
+    .room_item,
+    .user_item {
+        padding: 6px;
+        font-size: 12px;
+    }
+
+    .bottom {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        grid-template-columns: 76px minmax(0, 1fr) 95px;
+    }
+
+    .messages {
+        padding: 10px 7px;
+    }
+
+    .message_item .time {
+        font-size: 10px;
+    }
+
+    .message_item .nick {
+        margin-left: 2px;
+    }
+
+    .message_item .message {
+        margin-left: 3px !important;
+    }
+
+    .modal_content {
+        padding: 18px;
+    }
+}
+
+/* SolarEraser Chat — Owner/Admin Glow */
+
+.nick.chat-glow,
+.name.chat-glow {
+  color: var(--glow-color, #ffffff) !important;
+
+  text-shadow:
+    0 0 3px var(--glow-color, #ffffff),
+    0 0 7px var(--glow-color, #ffffff),
+    0 0 14px var(--glow-color, #ffffff),
+    0 0 24px var(--glow-color, #ffffff);
+
+  font-weight: 700;
+}
+
+/* STEP 123A — Mobile chat layout improvements */
+
+@media (max-width: 760px) {
+  .messages {
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 10px 8px;
+  }
+
+  .message_item {
+    padding: 2px 0;
+  }
+
+  .message_item .time {
+    font-size: 9px;
+  }
+
+  .message_item .nick {
+    font-size: 12px;
+  }
+
+  .message_item .message {
+    font-size: 12px;
+  }
+
+  .right {
+    padding: 8px 4px;
+  }
+
+  .right .user_item {
+    padding: 4px 2px !important;
+    font-size: 11px;
+  }
+
+  .right .name {
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .right select {
+    width: 100%;
+    font-size: 11px;
+    padding: 6px 2px !important;
+  }
+}
+
+/* STEP 126B — Invisible username hover backgrounds */
+
+.right .user_item:hover {
+    background: transparent !important;
+    border-color: transparent !important;
+}
+
+/* STEP 126C — Prevent username glow clipping */
+
+.right .name.chat-glow {
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+/* STEP 126D — Clean, borderless chat messages */
+
+.message_item {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.message_item:hover {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
