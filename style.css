@@ -583,3 +583,10 @@ input[type="text"]:focus {
     padding: 6px 2px !important;
   }
 }
+
+/* STEP 126B — Invisible username hover backgrounds */
+
+.right .user_item:hover {
+    background: transparent !important;
+    border-color: transparent !important;
+}
