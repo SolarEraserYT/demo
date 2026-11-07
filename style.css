@@ -597,3 +597,16 @@ input[type="text"]:focus {
     overflow: visible !important;
     text-overflow: clip !important;
 }
+
+/* STEP 126D — Clean, borderless chat messages */
+
+.message_item {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.message_item:hover {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
