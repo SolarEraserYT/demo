@@ -784,8 +784,9 @@ async function leaveChannel() {
 
   const oldChannel = channel;
 
-  channel = null;
+    channel = null;
   presenceWorking = false;
+  bncUsers.clear();
   userNames.replaceChildren();
 
   try {
