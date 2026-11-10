@@ -3774,9 +3774,11 @@ window.solarRenderServerAnnouncement({
       return;
     }
 
+    
     const value = event.shiftKey
       ? name.dataset.accountId
-      : name.textContent;
+      : name.textContent.trim().replace(/^\[|\]$/g, "");
+
 
     if (!value) return;
 
@@ -3788,7 +3790,10 @@ window.solarRenderServerAnnouncement({
         ? " "
         : "";
 
-    sendArea.value = existing + separator + value;
+    
+    sendArea.value =
+      existing + separator + value + " ";
+
 
     sendArea.focus();
     sendArea.setSelectionRange(
