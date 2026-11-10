@@ -2149,7 +2149,9 @@ console.log(
         ? " "
         : "";
 
-    sendArea.value = existing + separator + value;
+    
+    sendArea.value = existing + separator + value + " ";
+
 
     // Put the cursor at the end.
     sendArea.focus();
