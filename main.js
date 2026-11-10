@@ -4575,3 +4575,116 @@ line.dataset.solarWelcome = "true";
 })();
 
  // STEP 125F — Automatic deployment test
+
+/*
+  SolarEraser Chat — Step 129A
+  Permission-aware /help command.
+
+  /glow and /g intentionally remain secret.
+*/
+
+(function installChatHelp() {
+  const previousHandleCommand = handleCommand;
+
+  async function showChatHelp() {
+    if (!supabase || !currentRoomId) {
+      privateWarning("Connect to a room first.");
+      return;
+    }
+
+    try {
+      const requestedRoom = String(currentRoomId);
+
+      const { data, error } = await supabase.rpc(
+        "get_chat_help_permissions",
+        { p_room_id: requestedRoom }
+      );
+
+      if (error) throw error;
+
+      if (String(currentRoomId) !== requestedRoom) {
+        return;
+      }
+
+      const permissions = Array.isArray(data)
+        ? data[0]
+        : data;
+
+      if (!permissions) {
+        privateWarning("Help is unavailable in this room.");
+        return;
+      }
+
+      const role = String(
+        permissions.global_role || "user"
+      ).toLowerCase();
+
+      const isOwner = role === "owner";
+      const isStaff = [
+        "owner",
+        "admin",
+        "manager"
+      ].includes(role);
+
+      const isPrivateOwner =
+        permissions.is_private_owner === true;
+
+      const commands = [
+        "/nick NAME - Change nickname",
+        "/join ROOM - Join a private room",
+        "/recover_code - Show recovery code",
+        "/recover CODE - Recover account"
+      ];
+
+      if (isPrivateOwner && !isStaff) {
+        commands.push(
+          "/kick ID - Kick user from your private room"
+        );
+      }
+
+      if (isStaff) {
+        commands.push(
+          "/kick ID - Kick a user",
+          "/ban ID - Ban a user",
+          "/timeout ID - Move user to Spam",
+          "/untimeout ID - Release timed-out user",
+          "/rooms - View active rooms",
+          "/find ID - Find an account"
+        );
+      }
+
+      if (isOwner) {
+        commands.push(
+          "/admin_authority ID - Grant admin authority",
+          ".server MESSAGE - Official SERVER message"
+        );
+      }
+
+      // Secret commands are intentionally omitted.
+      // /glow and /g remain functional.
+
+      privateWarning(
+        "Available commands:\n" +
+        commands.join("\n")
+      );
+
+    } catch (error) {
+      privateWarning(
+        "Help failed: " + error.message
+      );
+    }
+  }
+
+  handleCommand = async function(content) {
+    if (/^\/help\s*$/i.test(content)) {
+      await showChatHelp();
+      return;
+    }
+
+    return previousHandleCommand(content);
+  };
+
+  console.log(
+    "[SolarEraser Chat] Step 129A /help loaded!"
+  );
+})();
