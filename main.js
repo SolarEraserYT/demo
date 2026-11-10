@@ -688,7 +688,13 @@ function renderUsers() {
       }
     }
   }
-
+  // Include BNC accounts, but don't duplicate live users.
+  for (const [accountId, person] of bncUsers) {
+    if (!people.has(accountId)) {
+      people.set(accountId, person);
+    }
+  }
+  
   const sorted = [...people.values()].sort(
     (a, b) => a.nickname.localeCompare(b.nickname)
   );
