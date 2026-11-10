@@ -686,3 +686,89 @@ input[type="text"]:focus {
   color: #ffffff;
   text-decoration: underline;
 }
+/* ==========================================
+   SOLARERASER CHAT — STAFF ELECTRIC THEMES
+   ========================================== */
+
+body.staff-owner {
+  --staff-electric: #ff304f;
+  --staff-electric-rgb: 255, 48, 79;
+  --staff-watermark: "OWNER";
+}
+
+body.staff-admin {
+  --staff-electric: #b45cff;
+  --staff-electric-rgb: 180, 92, 255;
+  --staff-watermark: "ADMIN";
+}
+
+body.staff-manager {
+  --staff-electric: #ffe23d;
+  --staff-electric-rgb: 255, 226, 61;
+  --staff-watermark: "MANAGER";
+}
+
+/* Subtle staff watermark behind messages */
+body:is(.staff-owner, .staff-admin, .staff-manager)
+.center::before {
+  content: var(--staff-watermark);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  font-size: clamp(50px, 10vw, 150px);
+  font-weight: 900;
+  letter-spacing: 12px;
+  color: var(--staff-electric);
+  opacity: 0.055;
+  text-shadow: 0 0 35px var(--staff-electric);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 0;
+}
+
+body:is(.staff-owner, .staff-admin, .staff-manager)
+.center {
+  position: relative;
+}
+
+/* Animated glowing outlines */
+body:is(.staff-owner, .staff-admin, .staff-manager)
+:is(.container, .right, .bottom) {
+  border-color: var(--staff-electric);
+  box-shadow:
+    inset 0 0 7px rgba(var(--staff-electric-rgb), 0.12),
+    0 0 9px rgba(var(--staff-electric-rgb), 0.24);
+  animation: staffElectricPulse 3s ease-in-out infinite;
+}
+
+/* Electric glow around the text input */
+body:is(.staff-owner, .staff-admin, .staff-manager)
+.send_area {
+  box-shadow:
+    inset 0 0 5px rgba(var(--staff-electric-rgb), 0.15),
+    0 0 8px rgba(var(--staff-electric-rgb), 0.28);
+}
+
+/* Soft pulsing electricity */
+@keyframes staffElectricPulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 4px rgba(var(--staff-electric-rgb), 0.1),
+      0 0 6px rgba(var(--staff-electric-rgb), 0.2);
+  }
+
+  50% {
+    box-shadow:
+      inset 0 0 10px rgba(var(--staff-electric-rgb), 0.22),
+      0 0 16px rgba(var(--staff-electric-rgb), 0.48);
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  body:is(.staff-owner, .staff-admin, .staff-manager)
+  :is(.container, .right, .bottom) {
+    animation: none;
+  }
+}
