@@ -548,7 +548,7 @@ function displayMessage(data) {
     data.nickname_color
   );
   
-  attachHoverCard(nick);
+  // attachHoverCard(nick);
   
   const content = document.createElement("span");
   content.className = "message";
@@ -670,7 +670,7 @@ function renderUsers() {
       person.color
     );
 
-        attachHoverCard(name);
+       // attachHoverCard(name);
 
     // Click = insert ID and copy it.
     // Shift-click = copy ID only.
