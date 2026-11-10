@@ -663,6 +663,18 @@ async function refreshBncUsers() {
     console.warn("[BNC] User refresh failed:", error);
   }
 }
+// Passively refresh BNC users every 15 seconds.
+setInterval(() => {
+  if (
+    !supabase ||
+    !channel ||
+    !currentRoomId ||
+    !presenceWorking ||
+    switching
+  ) return;
+
+  refreshBncUsers();
+}, 15000);
 function renderUsers() {
   userNames.replaceChildren();
 
