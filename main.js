@@ -426,11 +426,6 @@ async function showUsernameHoverCard(element) {
       profile.role || "user"
     );
 
-    addHoverCardLine(
-      "BNC",
-      profile.bnc_enabled ? "Yes" : "No"
-    );
-
     if (profile.created_at) {
       addHoverCardLine(
         "Joined",
