@@ -1049,9 +1049,10 @@ async function joinRoom(roomName, roomType = "public") {
     }
 
     if (result === "ok") {
-      presenceWorking = true;
-      renderUsers();
-      scheduleGlowRefresh();
+  presenceWorking = true;
+  renderUsers();
+  refreshBncUsers();
+  scheduleGlowRefresh();
 
     } else {
       presenceWorking = false;
