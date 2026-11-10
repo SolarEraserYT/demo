@@ -1251,6 +1251,18 @@ async function manageChatBnc(targetId, enabled) {
 // --------------------------------------------------
 
 async function handleCommand(content) {
+    // GLOBAL STAFF — BNC COMMANDS
+  const bncMatch = content.match(
+    /^\/(bnc|unbnc)(?:\s+(.*))?$/i
+  );
+
+  if (bncMatch) {
+    const enabled = bncMatch[1].toLowerCase() === "bnc";
+    const targetId = (bncMatch[2] || "").trim();
+
+    await manageChatBnc(targetId, enabled);
+    return;
+  }
   const nicknameMatch = content.match(
     /^\/(?:nick|n)(?:\s+(.*))?$/i
   );
