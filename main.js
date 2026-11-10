@@ -1208,6 +1208,44 @@ async function sendMessage() {
   busy = true;
 
   try {
+    
+    // Step 131K: Global owner custom SERVER command.
+    if (/^\.server(?:\s|$)/i.test(content)) {
+      sendArea.value = "";
+
+      const message = content
+        .replace(/^\.server\b/i, "")
+        .trim();
+
+      if (!verifiedOwner) {
+        privateWarning(
+          "Only the global owner can use .server."
+        );
+        return;
+      }
+
+      if (!message || message.length > 500) {
+        privateWarning(
+          "Usage: .server MESSAGE (1-500 characters)"
+        );
+        return;
+      }
+
+      const { error } = await supabase.rpc(
+        "send_custom_server_announcement",
+        {
+          p_room_id: currentRoomId,
+          p_message: message
+        }
+      );
+
+      if (error) {
+        privateWarning(error.message);
+      }
+
+      return;
+    }
+
     if (content.startsWith("/")) {
       sendArea.value = "";
       await handleCommand(content);
