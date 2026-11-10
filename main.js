@@ -3933,17 +3933,12 @@ line.dataset.solarWelcome = "true";
   // Place topic bar above the chat messages.
   messages.parentNode.insertBefore(topicBar, messages);
 
+  
   let displayedTopic = "";
+  let topicRequestRunning = false;
+  let lastTopicCheck = 0;
 
-  function updateTopic() {
-    let topic = MAIN_TOPIC;
-
-    if (currentRoomType === "private") {
-      topic = PRIVATE_TOPIC;
-    } else if (currentRoom === "Spam") {
-      topic = SPAM_TOPIC;
-    }
-
+  function showTopic(topic) {
     if (topic === displayedTopic) return;
 
     displayedTopic = topic;
@@ -3954,6 +3949,70 @@ line.dataset.solarWelcome = "true";
     void topicText.offsetWidth;
     topicText.style.animation = "";
   }
+
+  async function updateTopic() {
+    if (currentRoomType !== "private") {
+      showTopic(
+        currentRoom === "Spam"
+          ? SPAM_TOPIC
+          : MAIN_TOPIC
+      );
+      return;
+    }
+
+    if (!supabase || !currentRoomId) {
+      showTopic(PRIVATE_TOPIC);
+      return;
+    }
+
+    const roomId = String(currentRoomId);
+
+    // Show default instructions while loading.
+    if (displayedTopic === "" ||
+        topicText.dataset.roomId !== roomId) {
+      showTopic(PRIVATE_TOPIC);
+    }
+
+    topicText.dataset.roomId = roomId;
+
+    // Avoid overlapping requests.
+    if (topicRequestRunning) return;
+
+    // Check for changes every 3 seconds.
+    if (Date.now() - lastTopicCheck < 3000) return;
+
+    topicRequestRunning = true;
+    lastTopicCheck = Date.now();
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "get_chat_room_topic",
+        { p_room_id: roomId }
+      );
+
+      if (error) throw error;
+
+      // Ignore responses from a previous room.
+      if (String(currentRoomId) !== roomId) return;
+
+      const savedTopic =
+        typeof data === "string" && data.trim()
+          ? data
+          : PRIVATE_TOPIC;
+
+      showTopic(savedTopic);
+
+    } catch (error) {
+      console.warn(
+        "[Topic] Refresh failed:",
+        error.message
+      );
+
+    } finally {
+      topicRequestRunning = false;
+    }
+  }
+
 
   // Update immediately after switching rooms.
   const originalJoinRoom = joinRoom;
