@@ -622,6 +622,47 @@ function updateRoomSelector() {
 
 // BNC accounts displayed alongside live Realtime Presence users.
 let bncUsers = new Map();
+// Fetch BNC accounts assigned to the current room.
+async function refreshBncUsers() {
+  if (!supabase || !currentRoomId || !channel) {
+    bncUsers.clear();
+    return;
+  }
+
+  const roomId = currentRoomId;
+
+  try {
+    const { data, error } = await supabase.rpc(
+      "get_chat_room_bnc_users",
+      { p_room_id: roomId }
+    );
+
+    if (error) throw error;
+
+    // Ignore responses from a room we already left.
+    if (currentRoomId !== roomId || !channel) return;
+
+    const updated = new Map();
+
+    for (const person of data || []) {
+      if (!person.account_id) continue;
+
+      const accountId = String(person.account_id);
+
+      updated.set(accountId, {
+        accountId,
+        nickname: String(person.nickname || "Guest"),
+        color: validColor(person.nickname_color)
+      });
+    }
+
+    bncUsers = updated;
+    renderUsers();
+
+  } catch (error) {
+    console.warn("[BNC] User refresh failed:", error);
+  }
+}
 function renderUsers() {
   userNames.replaceChildren();
 
