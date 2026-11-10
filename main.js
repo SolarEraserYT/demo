@@ -4903,14 +4903,17 @@ line.dataset.solarWelcome = "true";
 }
 
       if (isStaff) {
-        commands.push(
-          "/ban",
-          "/timeout",
-          "/untimeout",
-          "/rooms",
-          "/find"
-        );
-      }
+  commands.push(
+    "/ban",
+    "/timeout",
+    "/untimeout",
+    "/kick",
+    "/rooms",
+    "/find",
+    "/bnc",
+    "/unbnc"
+  );
+}
 
       if (isOwner) {
         commands.push(
