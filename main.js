@@ -2913,6 +2913,44 @@ if (type === "ban") {
       ban: "was permanently banned from the server."
     };
 
+    // Custom SERVER announcements.
+    if (event.type === "custom") {
+      const text = String(event.message_text || "");
+
+      if (!text.trim()) return;
+
+      const line = document.createElement("div");
+      line.className = "message_item solar-server-line";
+
+      const time = document.createElement("span");
+      time.className = "time";
+      time.textContent = new Date().toLocaleTimeString(
+        "en-GB",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false
+        }
+      );
+
+      const server = document.createElement("span");
+      server.className = "nick solar-server-name";
+      server.textContent = "SERVER";
+
+      const message = document.createElement("span");
+      message.className = "message solar-server-text";
+      message.textContent = text;
+
+      line.append(time, server, message);
+      messagesContainer.appendChild(line);
+
+      messagesContainer.scrollTop =
+        messagesContainer.scrollHeight;
+
+      return;
+    }
+
     const action = allowedTypes[event.type];
 
     if (!action) return;
