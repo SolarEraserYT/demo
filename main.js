@@ -4640,9 +4640,11 @@ line.dataset.solarWelcome = "true";
         "/recover_code"
       ];
 
-      if (isPrivateOwner || isStaff) {
-        commands.push("/kick");
-      }
+      if (isPrivateOwner) {
+  commands.push("/kick", "/topic");
+} else if (isStaff) {
+  commands.push("/kick");
+}
 
       if (isStaff) {
         commands.push(
