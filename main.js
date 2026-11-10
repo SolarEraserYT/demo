@@ -1204,7 +1204,48 @@ async function grantRoomGlow(targetId) {
     await refreshVerifiedGlows();
   }
 }
+// --------------------------------------------------
+// BNC COMMANDS — GLOBAL STAFF ONLY
+// --------------------------------------------------
 
+async function manageChatBnc(targetId, enabled) {
+  if (!supabase || !profile) {
+    privateWarning("Chat is not connected.");
+    return;
+  }
+
+  const validId =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  if (!validId.test(targetId)) {
+    privateWarning(
+      enabled
+        ? "Usage: /bnc USER_ID"
+        : "Usage: /unbnc USER_ID"
+    );
+    return;
+  }
+
+  const { data, error } = await supabase.rpc(
+    "set_chat_bnc",
+    {
+      p_target_account_id: targetId,
+      p_enabled: enabled
+    }
+  );
+
+  if (error) {
+    privateWarning(error.message);
+    return;
+  }
+
+  privateWarning(
+    data || (enabled ? "BNC enabled." : "BNC disabled.")
+  );
+
+  // Update the user list after changing BNC.
+  await refreshBncUsers();
+}
 // --------------------------------------------------
 // COMMAND HANDLER
 // --------------------------------------------------
