@@ -3119,11 +3119,14 @@ if (type === "ban") {
 
         lastAnnouncementId = id;
 
-        window.solarRenderServerAnnouncement({
-          type: announcement.event_type,
-          nickname: announcement.target_nickname,
-          account_id: announcement.target_account_id
-        });
+        
+window.solarRenderServerAnnouncement({
+  type: announcement.event_type,
+  nickname: announcement.target_nickname,
+  account_id: announcement.target_account_id,
+  message_text: announcement.message_text
+});
+
       }
 
     } catch (error) {
