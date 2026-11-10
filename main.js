@@ -4583,6 +4583,12 @@ line.dataset.solarWelcome = "true";
   /glow and /g intentionally remain secret.
 */
 
+
+/*
+  SolarEraser Chat — Step 129B
+  Pink, clickable, permission-aware /help.
+*/
+
 (function installChatHelp() {
   const previousHandleCommand = handleCommand;
 
@@ -4621,26 +4627,105 @@ line.dataset.solarWelcome = "true";
 
       const isOwner = role === "owner";
       const isStaff = [
-        "owner",
-        "admin",
-        "manager"
+        "owner", "admin", "manager"
       ].includes(role);
 
       const isPrivateOwner =
         permissions.is_private_owner === true;
 
       const commands = [
-        "/nick NAME - Change nickname",
-        "/join ROOM - Join a private room",
-        "/recover_code - Show recovery code",
-        "/recover CODE - Recover account"
+        "/nick",
+        "/join",
+        "/recover",
+        "/recover_code"
       ];
 
-      if (isPrivateOwner && !isStaff) {
+      if (isPrivateOwner || isStaff) {
+        commands.push("/kick");
+      }
+
+      if (isStaff) {
         commands.push(
-          "/kick ID - Kick user from your private room"
+          "/ban",
+          "/timeout",
+          "/untimeout",
+          "/rooms",
+          "/find"
         );
       }
+
+      if (isOwner) {
+        commands.push(
+          "/admin_authority",
+          ".server"
+        );
+      }
+
+      // /glow and /g are intentionally hidden.
+
+      const line = document.createElement("div");
+      line.className = "chat-help-line";
+
+      const timestamp = document.createElement("span");
+      timestamp.className = "chat-help-time";
+      timestamp.textContent =
+        "[" + new Date().toLocaleTimeString(
+          "en-US",
+          { hour12: false }
+        ) + "] ";
+
+      const heading = document.createElement("span");
+      heading.className = "chat-help-heading";
+      heading.textContent = "COMMANDS";
+
+      line.append(timestamp, heading);
+
+      for (const command of commands) {
+        const item = document.createElement("span");
+        item.className = "chat-help-command";
+        item.textContent = command;
+        item.title = "Insert " + command;
+
+        item.addEventListener("click", () => {
+          // Use the existing chat input.
+          sendArea.value = command + " ";
+          sendArea.dispatchEvent(
+            new Event("input", { bubbles: true })
+          );
+          sendArea.focus();
+        });
+
+        line.appendChild(item);
+      }
+
+      messages.appendChild(line);
+
+      line.scrollIntoView({
+        block: "end",
+        behavior: "smooth"
+      });
+
+    } catch (error) {
+      privateWarning(
+        "Help failed: " + error.message
+      );
+    }
+  }
+
+  handleCommand = async function(content) {
+    if (/^\/help\s*$/i.test(content)) {
+      await showChatHelp();
+      return;
+    }
+
+    return previousHandleCommand(content);
+  };
+
+  console.log(
+    "[SolarEraser Chat] Step 129B /help loaded!"
+  );
+})();
+
 
       if (isStaff) {
         commands.push(
