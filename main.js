@@ -620,6 +620,8 @@ function updateRoomSelector() {
 // ONLINE USERS AND CLICKABLE IDS
 // --------------------------------------------------
 
+// BNC accounts displayed alongside live Realtime Presence users.
+let bncUsers = new Map();
 function renderUsers() {
   userNames.replaceChildren();
 
