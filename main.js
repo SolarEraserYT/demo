@@ -4727,3 +4727,73 @@ line.dataset.solarWelcome = "true";
     "[SolarEraser Chat] Step 129B /help loaded!"
   );
 })();
+
+/*
+  SolarEraser Chat — Step 130A
+  /topic command for private rooms.
+*/
+
+(function installTopicCommand() {
+  const previousHandleCommand = handleCommand;
+
+  async function changeRoomTopic(rawTopic) {
+    if (!supabase || !currentRoomId) {
+      privateWarning("Connect to a room first.");
+      return;
+    }
+
+    if (currentRoomType !== "private") {
+      privateWarning(
+        "/topic can only be used in private rooms."
+      );
+      return;
+    }
+
+    const topic = rawTopic.trim();
+
+    if (!topic || topic.length > 150) {
+      privateWarning(
+        "Usage: /topic MESSAGE (1-150 characters)"
+      );
+      return;
+    }
+
+    try {
+      const roomId = currentRoomId;
+
+      const { data, error } = await supabase.rpc(
+        "set_chat_room_topic",
+        {
+          p_room_id: roomId,
+          p_topic: topic
+        }
+      );
+
+      if (error) throw error;
+
+      privateWarning("Room topic updated!");
+
+    } catch (error) {
+      privateWarning(
+        "Topic failed: " + error.message
+      );
+    }
+  }
+
+  handleCommand = async function(content) {
+    const match = content.match(
+      /^\/topic(?:\s+([\s\S]*))?$/i
+    );
+
+    if (match) {
+      await changeRoomTopic(match[1] || "");
+      return;
+    }
+
+    return previousHandleCommand(content);
+  };
+
+  console.log(
+    "[SolarEraser Chat] Step 130A /topic loaded!"
+  );
+})();
