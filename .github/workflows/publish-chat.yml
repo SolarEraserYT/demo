@@ -104,8 +104,12 @@ jobs:
             ! -name .git -exec rm -rf {} +
 
           # Copy the newly generated website into the branch.
+          
           cp -a ../index.html ../main.js ../style.css \
-            ../CNAME ../version.json ../.nojekyll ./
+            ../CNAME ../version.json ./
+
+          touch .nojekyll
+
 
           git add -A
 
