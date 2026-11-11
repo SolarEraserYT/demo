@@ -29,6 +29,16 @@ const layout = document.querySelector(".container");
 
 const PUBLIC_ROOMS = ["Main Room", "Spam"];
 const SLOT_STORAGE_KEY = "solareraser_chat_colors_v1";
+// STEP 136BM — Secret remembrance room.
+const SECRET_ROOM_NAME = "remembrance";
+
+function isRemembranceRoom() {
+  return (
+    currentRoomType === "private" &&
+    String(currentRoom || "").toLowerCase() ===
+      SECRET_ROOM_NAME
+  );
+}
 
 let supabase = null;
 let profile = null;
