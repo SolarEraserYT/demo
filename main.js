@@ -574,11 +574,21 @@ function displayMessage(data) {
   
   attachUsernameHoverCard(nick);
   
-  const content = document.createElement("span");
-  content.className = "message";
-  content.textContent = data.content;
+  
+const content = document.createElement("span");
+content.className = "message";
+content.textContent = data.content;
 
-  line.append(time, level, nick, content);
+// STEP 136CH — Remembrance message color glow
+if (isRemembranceRoom()) {
+  content.style.setProperty(
+    "--remembrance-message-color",
+    validColor(data.nickname_color)
+  );
+}
+
+line.append(time, level, nick, content);
+
   messages.appendChild(line);
   messages.scrollTop = messages.scrollHeight;
 
