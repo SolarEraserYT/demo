@@ -1131,3 +1131,13 @@ filter:
     animation: none !important;
   }
 }
+
+/* ==========================================
+   STEP 136CH — REMEMBRANCE MESSAGE GLOW
+   ========================================== */
+
+body.room-remembrance .messages .message_item .message {
+  text-shadow:
+    0 0 2px var(--remembrance-message-color, #ffffff),
+    0 0 5px var(--remembrance-message-color, #ffffff);
+}
