@@ -827,3 +827,56 @@ body:is(.staff-owner, .staff-admin, .staff-manager)
     animation: none;
   }
 }
+/* ==========================================
+   STEP 136AS — TRAVELING ELECTRIC LETTERS
+   ========================================== */
+
+/* Keep the existing hollow staff lettering */
+body:is(.staff-owner, .staff-admin, .staff-manager)
+.center::before {
+  /* Animated electric highlight */
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    transparent 38%,
+    var(--staff-electric) 47%,
+    #ffffff 50%,
+    var(--staff-electric) 53%,
+    transparent 62%,
+    transparent 100%
+  );
+
+  background-size: 350% 100%;
+  background-position: 100% 50%;
+
+  /* Clip the moving highlight to the lettering */
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  /* Preserve hollow letter interiors */
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+
+  animation:
+    staffLetterElectric 4s linear infinite,
+    staffElectricTravel 7s linear infinite;
+}
+
+/* Electric light sweeps across the letters */
+@keyframes staffElectricTravel {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: -100% 50%;
+  }
+}
+
+/* Keep animations off for reduced-motion users */
+@media (prefers-reduced-motion: reduce) {
+  body:is(.staff-owner, .staff-admin, .staff-manager)
+  .center::before {
+    animation: none;
+  }
+}
