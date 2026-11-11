@@ -775,9 +775,44 @@ console.log("[USER SORT DEBUG]", state);
     }
   }
   
-  const sorted = [...people.values()].sort(
-    (a, b) => a.nickname.localeCompare(b.nickname)
-  );
+  
+/* ==========================================
+   STEP 136BI — GLOW FIRST, THEN LEVEL
+   ========================================== */
+
+// Request verified levels for everyone in the room,
+// including BNC users.
+for (const person of people.values()) {
+  fetchVerifiedUserLevel(person.accountId);
+}
+
+const sorted = [...people.values()].sort((a, b) => {
+  // Use the existing server-verified glow information.
+  const aGlowing =
+    glowRoomId === String(currentRoomId) &&
+    verifiedRoomGlows.get(a.accountId) === true;
+
+  const bGlowing =
+    glowRoomId === String(currentRoomId) &&
+    verifiedRoomGlows.get(b.accountId) === true;
+
+  // 1. Glowing users ALWAYS appear above regular users.
+  if (aGlowing !== bGlowing) {
+    return aGlowing ? -1 : 1;
+  }
+
+  // 2. Within each group, highest level appears first.
+  const aLevel = verifiedUserLevels.get(a.accountId) ?? 1;
+  const bLevel = verifiedUserLevels.get(b.accountId) ?? 1;
+
+  if (aLevel !== bLevel) {
+    return bLevel - aLevel;
+  }
+
+  // 3. Alphabetical order when levels are equal.
+  return a.nickname.localeCompare(b.nickname);
+});
+
 
   for (const person of sorted) {
     const item = document.createElement("div");
