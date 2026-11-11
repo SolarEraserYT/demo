@@ -1097,7 +1097,7 @@ body.room-remembrance .right .name.chat-glow {
     #ff24f3
   ) !important;
 
-  background-size: 2000% 2000% !important;
+  background-size: 300% 100% !important;
   background-clip: text !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
