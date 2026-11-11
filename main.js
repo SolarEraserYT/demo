@@ -243,7 +243,12 @@ async function refreshVerifiedGlows() {
     }
 
     glowRoomId = requestedRoom;
-    repaintVerifiedGlows();
+
+// Rebuild the user list whenever verified glow changes.
+renderUsers();
+
+// Keep existing message glow effects updated.
+repaintVerifiedGlows();
 
   } catch (error) {
     console.warn(
