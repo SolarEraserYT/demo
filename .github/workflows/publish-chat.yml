@@ -89,8 +89,10 @@ jobs:
             "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
           
-git fetch origin chat-published
-git -c core.sparseCheckout=false checkout -f -B chat-published FETCH_HEAD
+
+          git fetch origin chat-published
+          git -c core.sparseCheckout=false checkout -f -B chat-published FETCH_HEAD
+
 
 
           git config user.name "github-actions[bot]"
