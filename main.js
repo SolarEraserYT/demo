@@ -1391,6 +1391,59 @@ async function manageChatBnc(targetId, enabled) {
 // --------------------------------------------------
 
 async function handleCommand(content) {
+  
+  // ACCOUNT RECOVERY
+  const recoverMatch = content.match(
+    /^\/recover(?:\s+(.*))?$/i
+  );
+
+  if (recoverMatch) {
+    const code = (recoverMatch[1] || "").trim();
+
+    if (!/^[0-9a-f]{48}$/.test(code)) {
+      privateWarning("Usage: /recover YOUR_RECOVERY_CODE");
+      return;
+    }
+
+    privateWarning("Attempting account recovery...");
+
+    const { data, error } = await supabase.rpc(
+      "recover_chat_account_v2",
+      { p_code: code }
+    );
+
+    if (error) {
+      privateWarning("Recovery failed: " + error.message);
+      return;
+    }
+
+    const result = Array.isArray(data) ? data[0] : data;
+
+    if (result?.success === true) {
+      privateWarning(
+        "Account recovered! Reloading your chat..."
+      );
+      window.location.reload();
+      return;
+    }
+
+    if (result?.status === "rate_limited") {
+      privateWarning(
+        "Too many recovery attempts. Try again later."
+      );
+      return;
+    }
+
+    privateWarning(
+      result?.status === "invalid_code"
+        ? "Invalid or already-used recovery code."
+        : "Recovery failed: " +
+          (result?.status || "unknown error")
+    );
+
+    return;
+  }
+
     // GLOBAL STAFF — BNC COMMANDS
   const bncMatch = content.match(
     /^\/(bnc|unbnc)(?:\s+(.*))?$/i
