@@ -1141,3 +1141,79 @@ body.room-remembrance .messages .message_item .message {
     0 0 2px var(--remembrance-message-color, #ffffff),
     0 0 5px var(--remembrance-message-color, #ffffff);
 }
+
+/* ==========================================
+   STEP 136CK — REMEMBRANCE PARTICLES
+   ========================================== */
+
+/* Floating particles behind the chat messages */
+body.room-remembrance .messages {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Two layers of floating electric particles */
+body.room-remembrance .messages::before,
+body.room-remembrance .messages::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+
+  background-image:
+    radial-gradient(circle, #39ff88 1.5px, transparent 3px),
+    radial-gradient(circle, #9affc2 1px, transparent 2.5px),
+    radial-gradient(circle, #00ff66 1px, transparent 2px);
+
+  background-size:
+    145px 190px,
+    210px 250px,
+    275px 320px;
+
+  background-position:
+    15px 25px,
+    85px 120px,
+    140px 70px;
+
+  background-repeat: repeat;
+
+  opacity: 0.35;
+
+  filter: drop-shadow(0 0 4px #39ff88);
+
+  animation: remembranceParticles 18s linear infinite;
+}
+
+/* Second layer moves at a different speed */
+body.room-remembrance .messages::after {
+  opacity: 0.2;
+  transform: scale(1.05);
+  animation-duration: 29s;
+  animation-direction: reverse;
+}
+
+/* Smooth upward particle movement */
+@keyframes remembranceParticles {
+  from {
+    background-position:
+      15px 25px,
+      85px 120px,
+      140px 70px;
+  }
+
+  to {
+    background-position:
+      15px -735px,
+      85px -880px,
+      140px -1210px;
+  }
+}
+
+/* Accessibility: disable motion when requested */
+@media (prefers-reduced-motion: reduce) {
+  body.room-remembrance .messages::before,
+  body.room-remembrance .messages::after {
+    animation: none;
+  }
+}
