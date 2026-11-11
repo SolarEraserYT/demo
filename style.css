@@ -1102,9 +1102,10 @@ body.room-remembrance .right .name.chat-glow {
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
 
-  /* Soft glow follows the same RGB gradient */
-  filter:
-    drop-shadow(0 0 0.7px currentColor) !important;
+  /* EmuChat-style faint white glow */
+filter:
+  drop-shadow(0 0 1px rgba(255, 255, 255, 0.65))
+  drop-shadow(0 0 2px rgba(255, 255, 255, 0.18)) !important;
 
   animation: remembranceRGB 15s ease infinite !important;
 }
