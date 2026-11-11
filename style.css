@@ -1110,13 +1110,18 @@ filter:
   animation: remembranceRGB 15s ease infinite !important;
 }
 
+/* Cycle the full rainbow gradient across usernames */
 @keyframes remembranceRGB {
-  0%, 100% {
-    background-position: 0 82%;
+  0% {
+    background-position: 0% 50%;
   }
 
   50% {
-    background-position: 100% 19%;
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
   }
 }
 
