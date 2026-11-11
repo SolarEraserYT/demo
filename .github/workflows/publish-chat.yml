@@ -76,6 +76,7 @@ jobs:
 
           touch _site/.nojekyll
 
+
       - name: Publish to generated branch
         shell: bash
         run: |
@@ -84,18 +85,31 @@ jobs:
           cd _site
 
           git init
-          git checkout -b chat-published
+          git remote add origin \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          git fetch origin chat-published
+          git checkout -B chat-published FETCH_HEAD
 
           git config user.name "github-actions[bot]"
           git config user.email \
             "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # Remove old published files, keeping Git history.
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name .git -exec rm -rf {} +
+
+          # Copy the newly generated website into the branch.
+          cp -a ../index.html ../main.js ../style.css \
+            ../CNAME ../version.json ../.nojekyll ./
+
           git add -A
-          git commit -m "Publish ${GITHUB_SHA:0:12}"
 
-          git remote add origin \
-            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-
-          git push --force origin HEAD:chat-published
+          if git diff --cached --quiet; then
+            echo "No website changes to publish."
+          else
+            git commit -m "Publish ${GITHUB_SHA:0:12}"
+            git push origin HEAD:chat-published
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
