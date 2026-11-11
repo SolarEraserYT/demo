@@ -49,6 +49,8 @@ let chatAccountBanned = false;
 let serverAnnouncementSession = null;
 
 const verifiedRoomGlows = new Map();
+// STEP 136BG — Verified levels for user list sorting.
+const verifiedUserLevels = new Map();
 let glowRoomId = null;
 let glowRequestRunning = false;
 let glowRefreshTimer = null;
