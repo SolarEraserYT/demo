@@ -1164,9 +1164,16 @@ async function joinRoom(roomName, roomType = "public") {
     }
 
     currentRoom = roomName;
-    currentRoomId = roomId;
-    currentRoomType = roomType;
-    updateRoomSelector();
+currentRoomId = roomId;
+currentRoomType = roomType;
+
+// STEP 136BN — Activate the remembrance theme.
+document.body.classList.toggle(
+  "room-remembrance",
+  isRemembranceRoom()
+);
+
+updateRoomSelector();
     setInputReady(true);
 
     setStatus(
