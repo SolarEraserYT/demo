@@ -954,3 +954,64 @@ body:is(.staff-owner, .staff-admin, .staff-manager)
     animation: none;
   }
 }
+
+/* ==========================================
+   STEP 136BN — REMEMBRANCE GREEN ELECTRIC THEME
+   ========================================== */
+
+body.room-remembrance {
+  --remembrance-electric: #39ff88;
+  --remembrance-electric-rgb: 57, 255, 136;
+}
+
+/* Green electric borders */
+body.room-remembrance
+:is(.container, .right, .bottom) {
+  border-color: var(--remembrance-electric);
+
+  box-shadow:
+    inset 0 0 8px rgba(57, 255, 136, 0.15),
+    0 0 12px rgba(57, 255, 136, 0.35);
+
+  animation: remembrancePulse 3s ease-in-out infinite;
+}
+
+/* Green glow around message input */
+body.room-remembrance .send_area {
+  box-shadow:
+    inset 0 0 6px rgba(57, 255, 136, 0.15),
+    0 0 10px rgba(57, 255, 136, 0.3);
+}
+
+@keyframes remembrancePulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 5px rgba(57, 255, 136, 0.12),
+      0 0 8px rgba(57, 255, 136, 0.25);
+  }
+
+  50% {
+    box-shadow:
+      inset 0 0 12px rgba(57, 255, 136, 0.25),
+      0 0 20px rgba(57, 255, 136, 0.55);
+  }
+}
+
+/* Keep green theme for staff, overriding their usual
+   red/purple/yellow borders inside remembrance */
+body.room-remembrance:is(
+  .staff-owner,
+  .staff-admin,
+  .staff-manager
+) {
+  --staff-electric: #39ff88;
+  --staff-electric-rgb: 57, 255, 136;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  body.room-remembrance
+  :is(.container, .right, .bottom) {
+    animation: none;
+  }
+}
