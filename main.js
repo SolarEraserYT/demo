@@ -693,10 +693,14 @@ function renderUsers() {
 
       if (!people.has(accountId)) {
         people.set(accountId, {
-          accountId,
-          nickname: String(entry.nickname || "Guest"),
-          color: validColor(entry.nickname_color)
-        });
+  accountId,
+  nickname: String(entry.nickname || "Guest"),
+  color: validColor(entry.nickname_color),
+
+  // Sorting information
+  level: Number(entry.level) || 1,
+  hasGlow: Boolean(entry.has_glow)
+});
       }
     }
   }
