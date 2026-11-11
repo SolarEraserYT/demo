@@ -51,6 +51,18 @@ let serverAnnouncementSession = null;
 const verifiedRoomGlows = new Map();
 // STEP 136BG — Verified levels for user list sorting.
 const verifiedUserLevels = new Map();
+// STEP 136BJ — Refresh user levels every 60 seconds.
+setInterval(() => {
+  if (!supabase || !channel || !presenceWorking || switching) {
+    return;
+  }
+
+  // Clear cached levels so fresh values are fetched.
+  verifiedUserLevels.clear();
+
+  // Rebuild the list and request updated levels.
+  renderUsers();
+}, 60000);
 let glowRoomId = null;
 let glowRequestRunning = false;
 let glowRefreshTimer = null;
