@@ -1107,7 +1107,7 @@ filter:
   drop-shadow(0 0 1px rgba(255, 255, 255, 0.65))
   drop-shadow(0 0 2px rgba(255, 255, 255, 0.18)) !important;
 
-  animation: remembranceRGB 7.5s linear infinite alternate !important;
+  animation: remembranceRGB 3.5s linear infinite alternate !important;
 }
 
 /* Cycle the full rainbow gradient across usernames */
