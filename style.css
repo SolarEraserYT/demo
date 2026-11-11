@@ -1064,3 +1064,16 @@ filter:
     animation: none;
   }
 }
+
+/* STEP 136BR — EmuChat-style remembrance glow */
+
+body.room-remembrance .right .name.chat-glow,
+body.room-remembrance .messages .nick.chat-glow {
+  text-shadow: none !important;
+
+  filter:
+    drop-shadow(0 0 1.5px #1eff00)
+    drop-shadow(0 0 1.5px #1eff00) !important;
+
+  animation: none !important;
+}
