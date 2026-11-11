@@ -2189,10 +2189,25 @@ if (banStatus === true) {
     );
 
     if (glowProfile) {
-      profile.nickname_color = validColor(
-        glowProfile.nickname_color
-      );
-    }
+  profile.nickname_color = validColor(
+    glowProfile.nickname_color
+  );
+}
+
+// Apply the logged-in account's global staff theme.
+document.body.classList.remove(
+  "staff-owner",
+  "staff-admin",
+  "staff-manager"
+);
+
+const staffRole = String(
+  glowProfile?.role || "user"
+).toLowerCase();
+
+if (["owner", "admin", "manager"].includes(staffRole)) {
+  document.body.classList.add("staff-" + staffRole);
+}
 
     console.log(
       "[Chat] Logged in as:",
