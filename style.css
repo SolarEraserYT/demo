@@ -1042,9 +1042,9 @@ body.room-remembrance .right .name {
 
   animation: remembranceRainbow 5s linear infinite;
 
-  filter:
-    drop-shadow(0 0 3px #39ff88)
-    drop-shadow(0 0 6px rgba(57, 255, 136, 0.4));
+  /* Soft green glow — keeps usernames readable */
+filter:
+  drop-shadow(0 0 1px rgba(57, 255, 136, 0.35));
 }
 
 /* Move rainbow colors across usernames */
