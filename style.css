@@ -1084,7 +1084,9 @@ body.room-remembrance .messages .nick.chat-glow {
 
 /* Override the old green glow */
 body.room-remembrance .right .name,
-body.room-remembrance .right .name.chat-glow {
+body.room-remembrance .right .name.chat-glow,
+body.room-remembrance .messages .nick,
+body.room-remembrance .messages .nick.chat-glow {
   text-shadow: none !important;
 
   /* RGB colors move across the letters */
