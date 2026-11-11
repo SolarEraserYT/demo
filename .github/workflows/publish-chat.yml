@@ -8,15 +8,20 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: solareraser-publish
+  group: pages
   cancel-in-progress: false
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout source
@@ -76,48 +81,14 @@ jobs:
 
           touch _site/.nojekyll
 
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
 
-      - name: Publish to generated branch
-        shell: bash
-        run: |
-          set -euo pipefail
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
 
-          cd _site
-
-          git init
-          git remote add origin \
-            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-
-          
-
-          git fetch origin chat-published
-          git -c core.sparseCheckout=false checkout -f -B chat-published FETCH_HEAD
-
-
-
-          git config user.name "github-actions[bot]"
-          git config user.email \
-            "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # Remove old published files, keeping Git history.
-          find . -mindepth 1 -maxdepth 1 \
-            ! -name .git -exec rm -rf {} +
-
-          # Copy the newly generated website into the branch.
-          
-          cp -a ../index.html ../main.js ../style.css \
-            ../CNAME ../version.json ./
-
-          touch .nojekyll
-
-
-          git add -A
-
-          if git diff --cached --quiet; then
-            echo "No website changes to publish."
-          else
-            git commit -m "Publish ${GITHUB_SHA:0:12}"
-            git push origin HEAD:chat-published
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@v4
