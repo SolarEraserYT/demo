@@ -4234,6 +4234,10 @@ line.dataset.solarWelcome = "true";
     "of the room. You can change this topic by typing " +
     "/topic and the new room topic.";
 
+  // STEP 136CI — Secret Remembrance topic
+  const REMEMBRANCE_TOPIC =
+    "this is a hidden test room";
+
   const topicBar = document.createElement("div");
   topicBar.id = "solar-room-topic";
 
@@ -4303,6 +4307,13 @@ line.dataset.solarWelcome = "true";
   }
 
   async function updateTopic() {
+    
+    // STEP 136CI — Use the secret room topic
+    if (isRemembranceRoom()) {
+      showTopic(REMEMBRANCE_TOPIC);
+      return;
+    }
+
     if (currentRoomType !== "private") {
       showTopic(
         currentRoom === "Spam"
