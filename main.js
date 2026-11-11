@@ -682,6 +682,61 @@ setInterval(() => {
 
   refreshBncUsers();
 }, 15000);
+
+/* ==========================================
+   STEP 136BH — FETCH VERIFIED USER LEVELS
+   ========================================== */
+
+const pendingUserLevelRequests = new Set();
+
+async function fetchVerifiedUserLevel(accountId) {
+  const id = String(accountId || "");
+
+  if (
+    !id ||
+    !supabase ||
+    verifiedUserLevels.has(id) ||
+    pendingUserLevelRequests.has(id)
+  ) return;
+
+  pendingUserLevelRequests.add(id);
+
+  try {
+    const { data, error } = await supabase.rpc(
+      "get_chat_hover_profile",
+      { p_account_id: id }
+    );
+
+    if (error) throw error;
+
+    const user = Array.isArray(data) ? data[0] : data;
+
+    if (!user) return;
+
+    const level = Math.max(
+      1,
+      Math.floor(Number(user.level) || 1)
+    );
+
+    verifiedUserLevels.set(id, level);
+
+    // Reorder the list once the verified level arrives.
+    if (channel && presenceWorking) {
+      renderUsers();
+    }
+
+  } catch (error) {
+    console.warn(
+      "[User Levels] Failed to load:",
+      id,
+      error.message
+    );
+
+  } finally {
+    pendingUserLevelRequests.delete(id);
+  }
+}
+
 function renderUsers() {
   userNames.replaceChildren();
 
