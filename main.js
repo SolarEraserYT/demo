@@ -755,9 +755,7 @@ function renderUsers() {
   if (!channel || !presenceWorking) return;
 
   const state = channel.presenceState();
-  // TEMPORARY: Check what Supabase sends for each user.
-console.log("[USER SORT DEBUG]", state);
-  const people = new Map();
+const people = new Map();
 
   for (const entries of Object.values(state)) {
     if (!Array.isArray(entries)) continue;
