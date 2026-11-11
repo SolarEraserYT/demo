@@ -1077,3 +1077,50 @@ body.room-remembrance .messages .nick.chat-glow {
 
   animation: none !important;
 }
+
+/* ==========================================
+   STEP 136BS — SOFT RGB GLOW
+   ========================================== */
+
+/* Override the old green glow */
+body.room-remembrance .right .name,
+body.room-remembrance .right .name.chat-glow {
+  text-shadow: none !important;
+
+  /* RGB colors move across the letters */
+  background: linear-gradient(
+    124deg,
+    #ff2400, #ff4a00, #e8b71d,
+    #e3e81d, #a8e81d, #1de840,
+    #1de880, #1ddde8, #1d8fe8,
+    #2b1de8, #801de8, #dd00f3,
+    #ff24f3
+  ) !important;
+
+  background-size: 2000% 2000% !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+
+  /* Soft glow follows the same RGB gradient */
+  filter:
+    drop-shadow(0 0 0.7px currentColor) !important;
+
+  animation: remembranceRGB 15s ease infinite !important;
+}
+
+@keyframes remembranceRGB {
+  0%, 100% {
+    background-position: 0 82%;
+  }
+
+  50% {
+    background-position: 100% 19%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.room-remembrance .right .name {
+    animation: none !important;
+  }
+}
