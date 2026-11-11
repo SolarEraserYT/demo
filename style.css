@@ -880,3 +880,77 @@ body:is(.staff-owner, .staff-admin, .staff-manager)
     animation: none;
   }
 }
+
+/* ==========================================
+   STEP 136AT — MOVING ELECTRIC BORDER SPARKS
+   ========================================== */
+
+/* Give the staff panels a layer for electricity */
+body:is(.staff-owner, .staff-admin, .staff-manager)
+:is(.container, .right, .bottom) {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Animated electric sparks around the edges */
+body:is(.staff-owner, .staff-admin, .staff-manager)
+:is(.container, .right, .bottom)::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 2px;
+
+  background: conic-gradient(
+    from var(--staff-spark-angle),
+    transparent 0deg,
+    transparent 280deg,
+    var(--staff-electric) 320deg,
+    #ffffff 338deg,
+    var(--staff-electric) 350deg,
+    transparent 360deg
+  );
+
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+
+  pointer-events: none;
+  z-index: 2;
+
+  filter: drop-shadow(0 0 5px var(--staff-electric));
+
+  animation: staffSparkTravel 5s linear infinite;
+}
+
+/* Register the angle so it animates smoothly */
+@property --staff-spark-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Rotate the bright electric segment */
+@keyframes staffSparkTravel {
+  from {
+    --staff-spark-angle: 0deg;
+  }
+
+  to {
+    --staff-spark-angle: 360deg;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  body:is(.staff-owner, .staff-admin, .staff-manager)
+  :is(.container, .right, .bottom)::after {
+    animation: none;
+  }
+}
