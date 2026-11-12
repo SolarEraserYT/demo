@@ -1,0 +1,52 @@
+/* Top toolbar */
+
+.top {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 0 12px;
+
+    background: var(--bg-panel);
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.menu_button {
+    float: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+    margin: 0;
+
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    background: transparent;
+}
+
+.menu_button:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-subtle);
+}
+
+.menu_button svg {
+    width: 19px;
+    height: 19px;
+}
+
+.menu_button svg path,
+.menu_button svg circle,
+.menu_button svg polygon {
+    fill: var(--text-muted);
+}
+
+.menu_button:hover svg path,
+.menu_button:hover svg circle,
+.menu_button:hover svg polygon {
+    fill: var(--accent);
+}
