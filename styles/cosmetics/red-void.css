@@ -1,0 +1,199 @@
+/* ==========================================
+   RED VOID — Experimental Nameplate
+   ========================================== */
+
+.right .user_item.nameplate-red-void {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  min-height: 42px;
+  background: linear-gradient(
+    110deg, #09060b, #29070d 48%, #100609
+  ) !important;
+
+  border: 1px solid #a82135 !important;
+  border-radius: 8px;
+
+  box-shadow:
+    inset 0 0 14px #960f2930,
+    0 0 9px #ba133b55;
+
+  animation: void-breathe 2.6s ease-in-out infinite;
+}
+
+/* Red-black atmospheric clouds */
+
+.right .nameplate-red-void::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  z-index: 0;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      ellipse at 25% 70%,
+      #f21b3855, transparent 43%
+    ),
+    radial-gradient(
+      ellipse at 75% 30%,
+      #80051480, transparent 46%
+    ),
+    radial-gradient(
+      ellipse at 55% 85%,
+      #050206, transparent 48%
+    );
+
+  filter: blur(7px);
+  animation: void-smoke 6s ease-in-out infinite alternate;
+}
+
+/* Moving red energy streak */
+
+.right .nameplate-red-void::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+
+  background: linear-gradient(
+    105deg,
+    transparent 25%,
+    #ff315b13 42%,
+    #ff526b48 50%,
+    #ff315b13 58%,
+    transparent 75%
+  );
+
+  background-size: 300% 100%;
+  animation: void-energy 3.5s linear infinite;
+}
+
+/* Preserve the existing verified glow */
+
+.right .nameplate-red-void .name {
+  position: relative;
+  z-index: 3;
+  font-weight: 800;
+  animation: void-tremor 0.19s steps(2) infinite;
+}
+
+.right .nameplate-red-void
+.name:not(.chat-glow) {
+  text-shadow:
+    1px 1px 0 #080307,
+    0 0 6px #ff2448,
+    0 0 13px #ad002b;
+}
+
+/* Particle layer */
+
+.right .red-void-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.right .red-void-particles span {
+  position: absolute;
+  top: 75%;
+  left: var(--x);
+
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+
+  background: #ff2949;
+  box-shadow:
+    0 0 5px #ff254b,
+    0 0 11px #bd092c;
+
+  opacity: 0;
+
+  animation: void-particle
+    var(--duration) ease-out
+    var(--delay) infinite;
+}
+
+/* Some embers are dark fragments */
+
+.right .red-void-particles
+span:nth-child(3n) {
+  background: #080307;
+  border: 1px solid #aa1430;
+  box-shadow: 0 0 4px #ff143a;
+  border-radius: 1px;
+}
+
+/* Animations */
+
+@keyframes void-breathe {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 12px #9a0e2933,
+      0 0 5px #a9133855;
+  }
+  50% {
+    box-shadow:
+      inset 0 0 23px #ec133d66,
+      0 0 15px #e5164777;
+  }
+}
+
+@keyframes void-smoke {
+  from {
+    transform: translate(-9%, 5%) rotate(-8deg);
+  }
+  to {
+    transform: translate(9%, -7%) rotate(9deg);
+  }
+}
+
+@keyframes void-energy {
+  from { background-position: 150% 0; }
+  to   { background-position: -150% 0; }
+}
+
+@keyframes void-particle {
+  0% {
+    transform: translate(0, 4px) scale(0.4);
+    opacity: 0;
+  }
+  20% { opacity: 1; }
+  80% { opacity: 0.85; }
+  100% {
+    transform:
+      translate(var(--drift), -43px)
+      scale(0.1);
+    opacity: 0;
+  }
+}
+
+@keyframes void-tremor {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(0.5px, -0.5px); }
+  66% { transform: translate(-0.5px, 0.5px); }
+}
+
+.right .user_item.nameplate-red-void:hover {
+  background: #300810 !important;
+  border-color: #ff4661 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .right .nameplate-red-void,
+  .right .nameplate-red-void::before,
+  .right .nameplate-red-void::after,
+  .right .nameplate-red-void .name,
+  .right .red-void-particles span {
+    animation: none !important;
+  }
+
+  .right .red-void-particles {
+    display: none;
+  }
+}
