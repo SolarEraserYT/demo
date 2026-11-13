@@ -105,6 +105,7 @@ function getProfile(data) {
 
 function privateWarning(text) {
   const notice = document.createElement("div");
+  notice.className = "message_item solar-private-notice";
   notice.textContent = text;
   notice.style.cssText =
     "color:#ffbd77;font-size:12px;padding:4px 0;";

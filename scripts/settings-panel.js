@@ -67,7 +67,7 @@
         <div class="solar-settings-section-content"><div class="solar-settings-coming">More appearance and performance options can go here.</div></div>
       </details>
     </div>
-    
+
   `;
   document.body.appendChild(panel);
 

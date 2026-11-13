@@ -50,7 +50,7 @@ jobs:
           path = pathlib.Path("_site/index.html")
           html = path.read_text(encoding="utf-8")
 
-          for filename in ("main.js", "style.css", "styles/cosmetics/index.css", "styles/base/foundation.css", "styles/components/toolbar.css", "styles/components/settings-panel.css", "styles/themes/chat-themes.css", "scripts/settings-panel.js"):
+          for filename in ("main.js", "style.css", "styles/cosmetics/index.css", "styles/base/foundation.css", "styles/components/toolbar.css", "styles/components/settings-panel.css", "styles/themes/chat-themes.css", "styles/layout/chat-interface-v1.css", "scripts/settings-panel.js"):
               pattern = (
                   r'(["\'])' +
                   re.escape(filename) +
