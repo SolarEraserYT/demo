@@ -155,9 +155,11 @@
 })();
 
 
-/* SolarEraser — Namecard Inventory: Step 3A */
+/* SolarEraser — Solar Tempest Inventory: Step 3B */
 
 (() => {
+  "use strict";
+
   const section = document.getElementById(
     "solar-settings-inventory"
   );
@@ -168,14 +170,245 @@
 
   if (!content) return;
 
+  const style = document.createElement("style");
+  style.textContent = `
+    .tempest-inventory {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 4px 0;
+    }
+
+    .tempest-inventory-item {
+      padding: 11px;
+      border: 1px solid var(--border-subtle, #343444);
+      border-radius: 10px;
+      background: var(--bg-hover, #171923);
+    }
+
+    .tempest-preview {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: 85px;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #ffc848;
+      background:
+        radial-gradient(ellipse at 20% 65%, #9b570f, transparent 55%),
+        linear-gradient(110deg, #150d0a, #40220a 45%, #24080d);
+      box-shadow:
+        inset 0 0 20px #ffca3547,
+        0 0 12px #ffb82c40;
+      animation: tempest-border 3.4s ease-in-out infinite;
+    }
+
+    /* Flowing yellow energy */
+    .tempest-preview::before {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      inset: -60%;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 22% 48%, #ffe057aa, transparent 23%),
+        radial-gradient(ellipse at 53% 55%, #fff5ae80, transparent 18%),
+        radial-gradient(ellipse at 76% 46%, #ffba26a6, transparent 22%),
+        radial-gradient(ellipse at 87% 65%, #e829426b, transparent 13%);
+      filter: blur(9px);
+      animation: tempest-flow 6s ease-in-out infinite alternate;
+    }
+
+    /* Pulsing white light */
+    .tempest-preview::after {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 35% 55%, #ffffff70, transparent 29%),
+        linear-gradient(110deg,
+          transparent 22%,
+          #fff2a640 43%,
+          #ffffff60 49%,
+          #ffd44835 55%,
+          transparent 75%);
+      background-size: 100%, 250% 100%;
+      animation: tempest-white 3.4s ease-in-out infinite;
+    }
+
+    /* Red flare particles */
+    .tempest-flares {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 12% 26%, #ff4357 0 2px, transparent 5px),
+        radial-gradient(circle at 48% 73%, #ff6246 0 2px, transparent 6px),
+        radial-gradient(circle at 80% 24%, #ff2744 0 3px, transparent 7px),
+        radial-gradient(circle at 92% 65%, #ff5d36 0 2px, transparent 6px);
+      filter: drop-shadow(0 0 5px red);
+      animation: tempest-flares 4.2s steps(1) infinite;
+    }
+
+    /* Electricity occasionally strikes across the card */
+    .tempest-electricity {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      pointer-events: none;
+      opacity: 0;
+      filter: drop-shadow(0 0 4px #fff)
+              drop-shadow(0 0 8px #ffdc65);
+      animation: tempest-lightning 5.3s steps(1) infinite;
+    }
+
+    .tempest-preview-name {
+      position: relative;
+      z-index: 4;
+      font-size: 17px;
+      font-weight: 900;
+      color: #fff9d2;
+      text-shadow:
+        0 0 4px #fff,
+        0 0 11px #ffdf66,
+        0 0 20px #ffb023;
+    }
+
+    .tempest-info {
+      margin: 11px 0;
+    }
+
+    .tempest-info strong {
+      display: block;
+      font-size: 14px;
+      color: #ffdc70;
+    }
+
+    .tempest-info small {
+      display: block;
+      margin-top: 4px;
+      color: var(--text-muted, #9b9eaf);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .tempest-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tempest-action {
+      flex: 1;
+      border: 1px solid #bd8e2d;
+      background: #593c10;
+      color: #fff2bf;
+      border-radius: 7px;
+      padding: 9px 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tempest-action:hover:not(:disabled) {
+      background: #78521a;
+    }
+
+    .tempest-action:disabled {
+      opacity: .55;
+      cursor: default;
+    }
+
+    .tempest-action.secondary {
+      background: var(--bg-panel, #161720);
+      border-color: var(--border-subtle, #41414d);
+      color: var(--text-main, #fff);
+    }
+
+    .tempest-status {
+      margin-top: 9px;
+      color: var(--text-muted, #a4a4b2);
+      font-size: 11px;
+    }
+
+    @keyframes tempest-flow {
+      from {
+        transform: translate(-13%, -3%) rotate(-8deg);
+      }
+      to {
+        transform: translate(14%, 5%) rotate(9deg);
+      }
+    }
+
+    @keyframes tempest-border {
+      0%, 100% {
+        box-shadow: inset 0 0 15px #ffca3540,
+                    0 0 7px #ffc94e4a;
+      }
+      50% {
+        box-shadow: inset 0 0 28px #fff0a760,
+                    0 0 18px #ffd66291;
+      }
+    }
+
+    @keyframes tempest-white {
+      0%, 100% {
+        opacity: .35;
+        background-position: center, 100% 0;
+      }
+      50% {
+        opacity: .9;
+        background-position: center, 0% 0;
+      }
+    }
+
+    @keyframes tempest-flares {
+      0%, 100% { opacity: .18; }
+      13% { opacity: .9; }
+      15% { opacity: .25; }
+      39% { opacity: .7; }
+      42% { opacity: .16; }
+      76% { opacity: 1; }
+      79% { opacity: .2; }
+    }
+
+    @keyframes tempest-lightning {
+      0%, 19%, 22%, 51%, 54%, 85%, 88%, 100% {
+        opacity: 0;
+      }
+      20%, 52%, 86% { opacity: 1; }
+      21%, 53%, 87% { opacity: .35; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tempest-preview,
+      .tempest-preview::before,
+      .tempest-preview::after,
+      .tempest-flares,
+      .tempest-electricity {
+        animation: none !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+
   const status = document.createElement("div");
   status.className = "solar-settings-coming";
   status.textContent = "Open to view your namecards.";
 
   content.replaceChildren(status);
 
-  section.addEventListener("toggle", async () => {
-    if (!section.open) return;
+  let requestNumber = 0;
+
+  async function refreshInventory() {
+    const request = ++requestNumber;
 
     status.textContent = "Loading inventory...";
     content.replaceChildren(status);
@@ -190,13 +423,13 @@
       );
 
       if (error) throw error;
-      if (!section.open) return;
-
-      content.replaceChildren();
+      if (request !== requestNumber || !section.open) return;
 
       const owned = Array.isArray(data?.owned)
         ? data.owned
         : [];
+
+      content.replaceChildren();
 
       if (!owned.length) {
         status.textContent = "No namecards owned yet.";
@@ -205,30 +438,140 @@
       }
 
       for (const cardId of owned) {
+        if (cardId !== "solar_tempest") {
+          const other = document.createElement("div");
+          other.className = "solar-settings-coming";
+          other.textContent = String(cardId).replaceAll("_", " ");
+          content.appendChild(other);
+          continue;
+        }
+
+        const equipped = data.equipped === cardId;
+
         const item = document.createElement("div");
-        item.className = "solar-settings-coming";
+        item.className = "tempest-inventory-item";
 
-        const name = cardId === "solar_tempest"
-          ? "⚡ Solar Tempest"
-          : cardId.replaceAll("_", " ");
+        item.innerHTML = `
+          <div class="tempest-preview">
+            <div class="tempest-flares"></div>
 
-        item.textContent = name + (
-          data.equipped === cardId
-            ? " — Equipped"
-            : " — Owned"
-        );
+            <svg class="tempest-electricity"
+                 viewBox="0 0 300 85"
+                 preserveAspectRatio="none"
+                 aria-hidden="true">
+              <path
+                d="M-5 39 L35 35 L57 15 L68 49
+                   L89 25 L119 43 L143 10
+                   L159 38 L198 22 L222 49
+                   L253 25 L305 33"
+                fill="none"
+                stroke="#ffffff"
+                stroke-width="1.7"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M-5 39 L35 35 L57 15 L68 49
+                   L89 25 L119 43 L143 10
+                   L159 38 L198 22 L222 49
+                   L253 25 L305 33"
+                fill="none"
+                stroke="#ffe565"
+                stroke-width="4"
+                opacity=".4"
+              />
+            </svg>
+
+            <span class="tempest-preview-name">
+              SolarEraser
+            </span>
+          </div>
+
+          <div class="tempest-info">
+            <strong>⚡ Solar Tempest</strong>
+            <small>
+              Flowing golden energy, pulsing white light,
+              red flares and electric sparks.
+            </small>
+          </div>
+
+          <div class="tempest-actions">
+            <button type="button"
+                    class="tempest-action tempest-equip">
+              ${equipped ? "Equipped ✓" : "Equip"}
+            </button>
+
+            <button type="button"
+                    class="tempest-action secondary tempest-unequip">
+              Unequip
+            </button>
+          </div>
+
+          <div class="tempest-status">
+            ${equipped
+              ? "Currently equipped"
+              : "Owned — not equipped"}
+          </div>
+        `;
+
+        const equip = item.querySelector(".tempest-equip");
+        const unequip = item.querySelector(".tempest-unequip");
+
+        equip.disabled = equipped;
+        unequip.disabled = !equipped;
+
+        async function changeCard(nextCard) {
+          equip.disabled = true;
+          unequip.disabled = true;
+
+          const message = item.querySelector(".tempest-status");
+          message.textContent = "Saving...";
+
+          try {
+            const { error } = await supabase.rpc(
+              "set_my_chat_namecard",
+              { p_card_id: nextCard }
+            );
+
+            if (error) throw error;
+
+            await refreshInventory();
+
+          } catch (error) {
+            console.warn("[Namecards]", error);
+            message.textContent =
+              "Could not save: " + error.message;
+
+            equip.disabled = equipped;
+            unequip.disabled = !equipped;
+          }
+        }
+
+        equip.addEventListener("click", () => {
+          changeCard("solar_tempest");
+        });
+
+        unequip.addEventListener("click", () => {
+          changeCard(null);
+        });
 
         content.appendChild(item);
       }
 
     } catch (error) {
-      console.warn("[Inventory]", error);
+      console.warn("[Namecard Inventory]", error);
 
       status.textContent =
         "Could not load inventory: " + error.message;
 
       content.replaceChildren(status);
     }
+  }
+
+  section.addEventListener("toggle", () => {
+    if (section.open) {
+      refreshInventory();
+    } else {
+      requestNumber++;
+    }
   });
 })();
-
