@@ -1,5 +1,5 @@
 /* ==========================================================
-   SolarEraser Chat — Interface Exploration 01: SIGNAL / LEDGER
+   SolarEraser Chat — Interface Study 03: CLASSIC TRANSCRIPT
    Intentionally CSS-only. Keep nameplate art, glow and chat
    behavior independent of this visual experiment.
    ========================================================== */
@@ -21,7 +21,7 @@ body {
   padding-inline: 10px;
   background: var(--bg-panel);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 .top .menu_button { width: 29px; height: 29px; border-radius: 6px; }
 .top .menu_button svg { width: 16px; height: 16px; }
@@ -59,7 +59,7 @@ body {
   margin: 8px 13px 0;
   overflow: hidden;
   border: 1px solid var(--border-subtle);
-  border-radius: 11px;
+  border-radius: 6px;
   background: var(--bg-main);
 }
 
@@ -103,47 +103,52 @@ body {
   letter-spacing: 0.015em;
 }
 
-/* Each chat event becomes a compact line in a message ledger.
-   A small left-side marker replaces animated visual decoration. */
+/* Classic transcript: messages remain part of a shared conversation,
+   separated with fine rules rather than enclosed in independent cards. */
 .messages {
-  padding: 14px clamp(9px, 1.1vw, 18px) 20px;
+  padding: 12px clamp(9px, 1.15vw, 20px) 22px;
   line-height: 1.55;
 }
 
 .messages .message_item {
   position: relative;
   display: block;
-  min-height: 36px;
   width: 100%;
   max-width: none;
-  margin: 0 0 8px;
-  padding: 7px 11px 7px 14px !important;
-  border: 1px solid var(--border-subtle) !important;
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--bg-panel) 52%, var(--bg-main)) !important;
+  min-height: 0;
+  margin: 0;
+  padding: 6px 9px 7px 10px !important;
+  border: 0 !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 75%, transparent) !important;
+  border-radius: 0;
+  background: transparent !important;
   box-shadow: none !important;
-  line-height: 1.55;
-  transition: border-color 120ms ease, background-color 120ms ease;
+  line-height: 1.65;
+  transition: background-color 130ms ease;
 }
 
+/* The accent appears only on hover, so the transcript stays quiet. */
 .messages .message_item::before {
   content: "";
   position: absolute;
-  left: -1px;
   top: 7px;
   bottom: 7px;
+  left: 0;
   width: 2px;
   background: var(--accent);
-  opacity: 0.43;
+  opacity: 0;
   pointer-events: none;
 }
 
 .messages .message_item:hover {
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--border-subtle)) !important;
-  background: color-mix(in srgb, var(--bg-panel) 70%, var(--bg-main)) !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--bg-panel) 48%, transparent) !important;
   box-shadow: none !important;
 }
+.messages .message_item:hover::before { opacity: 0.65; }
 
+/* Compact, readable metadata with room for colorful usernames. */
 .messages .message_item .time {
   margin-right: 5px;
   color: var(--text-muted);
@@ -151,17 +156,15 @@ body {
   font-size: 10px;
   font-variant-numeric: tabular-nums;
 }
-
 .messages .message_item .chat-level { margin-right: 4px; }
 .messages .message_item .nick { margin-left: 3px; }
 .messages .message_item .message { line-height: 1.6; }
 
-/* Private notices, including color-save confirmations, use the same row. */
-.messages .solar-private-notice {
-  color: #ffbd77;
-}
+/* Personal status notices are readable, but not framed as chat cards. */
+.messages .solar-private-notice { color: #ffbd77; }
 .messages .solar-private-notice::before {
   background: #ffbd77;
+  opacity: 0.55;
 }
 
 /* Centered composer with enough vertical room to stay fully visible. */
@@ -241,9 +244,9 @@ body.room-remembrance .send_area {
   }
   .messages { padding: 9px 8px 15px; }
   .messages .message_item {
-    margin-bottom: 6px;
-    padding: 6px 7px 6px 10px !important;
-    min-height: 30px;
+    margin: 0;
+    min-height: 0;
+    padding: 5px 6px 6px 7px !important;
   }
   .bottom { flex-basis: 50px; height: 50px; padding: 6px 8px 8px; gap: 6px; }
   .send_area { flex: 1 1 auto; width: 0; height: 36px; }
