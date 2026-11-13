@@ -50,3 +50,8 @@
 .menu_button:hover svg polygon {
     fill: var(--accent);
 }
+
+/* Hide unused Join Room toolbar button */
+.top .menu_button[data-target="join_room"] {
+    display: none !important;
+}
