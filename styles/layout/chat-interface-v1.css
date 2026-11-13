@@ -30,12 +30,13 @@ body {
    Some of its dimensions are inline styles, hence the scoped overrides. */
 #solar-room-topic {
   position: absolute !important;
-  left: 50% !important;
+  left: 99px !important;
+  right: 18px !important;
   top: 50% !important;
-  transform: translate(-50%, -50%) !important;
+  transform: translateY(-50%) !important;
   flex: none !important;
-  width: min(610px, calc(100% - 160px)) !important;
-  max-width: 610px !important;
+  width: auto !important;
+  max-width: none !important;
   height: 23px !important;
   margin: 0 !important;
   background: var(--bg-main) !important;
@@ -167,22 +168,22 @@ body {
   opacity: 0.55;
 }
 
-/* Centered composer with enough vertical room to stay fully visible. */
+/* Compact left-aligned composer. Leave the right side open for future tools. */
 .bottom {
   flex: 0 0 56px;
   height: 56px;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 9px;
-  padding: 7px 13px 9px;
+  padding: 7px 24px 9px;
   background: transparent;
   border: 0;
   border-top: 0;
 }
 
 .send_area {
-  flex: 0 1 760px;
-  width: min(70vw, 760px);
-  max-width: 760px;
+  flex: 0 1 min(87vw, 1540px);
+  width: min(87vw, 1540px);
+  max-width: 1540px;
   min-width: 0;
   height: 40px;
   background: var(--bg-input);
@@ -218,6 +219,7 @@ body.room-remembrance .send_area {
   #solar-room-topic {
     position: relative !important;
     left: auto !important;
+    right: auto !important;
     top: auto !important;
     transform: none !important;
     flex: 1 1 0 !important;
@@ -225,6 +227,7 @@ body.room-remembrance .send_area {
     max-width: none !important;
     height: 23px !important;
     margin-left: 5px !important;
+    margin-right: 5px !important;
   }
   .container {
     flex: 1 1 auto;
