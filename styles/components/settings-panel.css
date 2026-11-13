@@ -1,0 +1,173 @@
+/* SolarEraser Settings — dedicated, intentionally restrained UI. */
+.solar-settings-panel,
+.solar-settings-panel * { box-sizing: border-box; }
+
+.solar-settings-panel[hidden] { display: none !important; }
+.solar-settings-panel {
+  position: fixed;
+  z-index: 10010;
+  width: min(386px, calc(100vw - 20px));
+  max-height: calc(100dvh - 70px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0;
+  background: #09090b;
+  color: #f2f2f5;
+  border: 1px solid #efeff2;
+  border-radius: 10px;
+  box-shadow: 0 18px 52px #000b, inset 0 0 0 1px #ffffff08;
+  font: 13px/1.45 Inter, "Segoe UI", Arial, sans-serif;
+  scrollbar-width: thin;
+  scrollbar-color: #555 #101013;
+}
+.solar-settings-panel .solar-settings-header {
+  padding: 16px 17px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  justify-content: space-between;
+  border-bottom: 1px solid #303036;
+}
+.solar-settings-eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .19em;
+  color: #8f8f9c;
+  text-transform: uppercase;
+}
+.solar-settings-title { margin-top: 3px; font-size: 18px; font-weight: 700; letter-spacing: -.035em; }
+.solar-settings-subtitle { margin-top: 4px; font-size: 11px; color: #a3a3b0; }
+.solar-settings-close {
+  flex: none;
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #46464e;
+  border-radius: 5px;
+  background: #17171b;
+  color: #dedee3;
+  font-size: 19px;
+  line-height: 1;
+  padding: 0;
+}
+.solar-settings-close:hover { background: #303036; color: white; }
+.solar-settings-body { padding: 11px; display: grid; gap: 7px; }
+.solar-settings-section { background: #101014; border: 1px solid #34343b; border-radius: 7px; overflow: hidden; }
+.solar-settings-section[open] { border-color: #858591; }
+.solar-settings-section summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 57px;
+  padding: 10px 13px;
+  user-select: none;
+}
+.solar-settings-section summary::-webkit-details-marker { display: none; }
+.solar-settings-section summary:hover { background: #1a1a20; }
+.solar-settings-icon {
+  width: 29px; height: 29px;
+  display: grid; place-items: center;
+  flex: none;
+  font-size: 15px;
+  border: 1px solid #464650;
+  border-radius: 6px;
+  background: #1d1d23;
+}
+.solar-settings-label { min-width: 0; flex: 1; }
+.solar-settings-label strong { display: block; font-size: 12px; font-weight: 650; color: #f2f2f5; }
+.solar-settings-label small { display: block; font-size: 10px; color: #aaaab4; margin-top: 2px; }
+.solar-settings-chevron { font-size: 13px; color: #a9a9b4; transform: rotate(0); transition: transform .14s ease; }
+.solar-settings-section[open] .solar-settings-chevron { transform: rotate(90deg); }
+.solar-settings-section-content { border-top: 1px solid #303036; padding: 12px; }
+.solar-settings-note { margin: 0 0 10px; font-size: 11px; line-height: 1.5; color: #a5a5b0; }
+.solar-settings-footer { padding: 0 16px 13px; color: #777784; font-size: 10px; }
+.solar-settings-coming { padding: 10px 8px; color: #a4a4b0; font-size: 11px; }
+
+/* Existing working nickname-color picker, now in the section. */
+.solar-settings-panel .solar-color-menu {
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  left: auto !important;
+  top: auto !important;
+  z-index: auto;
+  margin: 0;
+  padding: 10px;
+  background: #17171c;
+  border: 1px solid #4b4b54;
+  border-radius: 6px;
+  box-shadow: none;
+  color: #f2f2f5;
+  font: 12px Inter, "Segoe UI", Arial, sans-serif;
+}
+.solar-settings-panel .solar-color-row { gap: 8px; margin-bottom: 8px; }
+.solar-settings-panel .solar-color-preview { width: 25px; height: 25px; border: 1px solid #d7d7df; border-radius: 4px; }
+.solar-settings-panel .solar-color-select {
+  background: #111115;
+  color: #f2f2f5;
+  border: 1px solid #5c5c66;
+  border-radius: 5px;
+  padding: 7px 8px;
+}
+.solar-settings-panel .solar-color-menu > button,
+.solar-settings-panel .solar-color-actions button {
+  background: #24242b !important;
+  color: #ededf2 !important;
+  border: 1px solid #666670 !important;
+  border-radius: 5px !important;
+  padding: 6px 10px !important;
+}
+.solar-settings-panel .solar-color-menu > button:hover,
+.solar-settings-panel .solar-color-actions button:hover { background: #383840 !important; }
+.solar-settings-panel .solar-color-popup {
+  position: static;
+  top: auto;
+  left: auto;
+  width: 100%;
+  margin-top: 9px;
+  background: #101015;
+  border: 1px solid #42424d;
+  border-radius: 5px;
+  box-shadow: none;
+  padding: 9px;
+}
+.solar-settings-panel .solar-color-workspace { width: 100%; }
+.solar-settings-panel .solar-color-square { flex: 1; width: auto; min-width: 0; }
+.solar-settings-panel .solar-hue-bar { flex: 0 0 22px; }
+.solar-settings-panel .solar-color-error { font-size: 11px; }
+
+/* Interactive theme choices. No sweeping shine, no background animation. */
+.solar-settings-theme-list { display: grid; gap: 7px; }
+.solar-settings-theme-choice {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  text-align: left;
+  padding: 8px 10px;
+  color: #ededf2;
+  background: #16161b;
+  border: 1px solid #45454e;
+  border-radius: 6px;
+}
+.solar-settings-theme-choice:hover { background: #25252c; }
+.solar-settings-theme-choice[aria-pressed="true"] { border-color: #e9e9f0; background: #25252e; }
+.solar-settings-theme-swatch { display: flex; gap: 2px; width: 42px; height: 24px; flex: none; border: 1px solid #565660; border-radius: 4px; overflow: hidden; }
+.solar-settings-theme-swatch span { flex: 1; }
+.solar-settings-theme-description { flex: 1; min-width: 0; }
+.solar-settings-theme-description strong { display: block; font-size: 12px; }
+.solar-settings-theme-description small { display: block; margin-top: 1px; color: #a6a6b2; font-size: 10px; }
+.solar-settings-theme-selected { width: 16px; text-align: center; color: #f1f1ff; font-size: 15px; }
+.solar-settings-panel button:focus-visible,
+.solar-settings-panel summary:focus-visible { outline: 2px solid #f4f4fb; outline-offset: -2px; }
+@media (max-width: 480px) {
+  .solar-settings-panel { max-height: calc(100dvh - 60px); }
+  .solar-settings-header { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .solar-settings-panel * { transition: none !important; }
+}

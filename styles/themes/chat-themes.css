@@ -1,0 +1,60 @@
+/* Optional chat palettes, selected locally per browser.
+   The original SolarEraser palette remains the default.
+   Cosmetic nameplates and role-specific effects remain separate. */
+
+:root[data-solar-theme="midnight"] {
+  --border-color: #a9c7f2;
+  --active-color: #79acff;
+  --button-background: #285e9b;
+  --input-background: #0b1a2c;
+  --bg-main: #07111f;
+  --bg-panel: #101e30;
+  --bg-hover: #1a3654;
+  --bg-input: #0b1a2c;
+  --border-subtle: #243b52;
+  --text-main: #e4f0ff;
+  --text-muted: #8faecc;
+  --accent: #69adff;
+  --accent-hover: #417fcb;
+}
+:root[data-solar-theme="forest"] {
+  --border-color: #a4d6be;
+  --active-color: #71dca3;
+  --button-background: #28634c;
+  --input-background: #10241b;
+  --bg-main: #0a1712;
+  --bg-panel: #13221a;
+  --bg-hover: #203d2d;
+  --bg-input: #10241b;
+  --border-subtle: #2d493b;
+  --text-main: #e4f5e9;
+  --text-muted: #9db8a6;
+  --accent: #7bd7a4;
+  --accent-hover: #358b61;
+}
+:root[data-solar-theme="monochrome"] {
+  --border-color: #c9c9ce;
+  --active-color: #d4d4da;
+  --button-background: #48484f;
+  --input-background: #141416;
+  --bg-main: #0b0b0c;
+  --bg-panel: #19191b;
+  --bg-hover: #2c2c2f;
+  --bg-input: #141416;
+  --border-subtle: #3a3a40;
+  --text-main: #ececef;
+  --text-muted: #a1a1a9;
+  --accent: #d4d4da;
+  --accent-hover: #67676f;
+}
+/* Some old user-card rules still contain fixed colors; theme only regular cards. */
+:root[data-solar-theme]:not([data-solar-theme="default"])
+.right .user_item:not(.nameplate-red-void):not(.nameplate-glitch-test) {
+  background: var(--bg-hover);
+  border-color: var(--border-subtle);
+}
+:root[data-solar-theme]:not([data-solar-theme="default"])
+.right .user_item:not(.nameplate-red-void):not(.nameplate-glitch-test):hover {
+  background: var(--bg-hover) !important;
+  border-color: var(--accent) !important;
+}
