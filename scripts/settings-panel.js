@@ -153,3 +153,82 @@
 
   window.SolarSettingsPanel = { open, close, toggle };
 })();
+
+
+/* SolarEraser — Namecard Inventory: Step 3A */
+
+(() => {
+  const section = document.getElementById(
+    "solar-settings-inventory"
+  );
+
+  const content = section?.querySelector(
+    ".solar-settings-section-content"
+  );
+
+  if (!content) return;
+
+  const status = document.createElement("div");
+  status.className = "solar-settings-coming";
+  status.textContent = "Open to view your namecards.";
+
+  content.replaceChildren(status);
+
+  section.addEventListener("toggle", async () => {
+    if (!section.open) return;
+
+    status.textContent = "Loading inventory...";
+    content.replaceChildren(status);
+
+    try {
+      if (!supabase || !profile) {
+        throw new Error("Chat is still connecting.");
+      }
+
+      const { data, error } = await supabase.rpc(
+        "get_my_chat_namecards"
+      );
+
+      if (error) throw error;
+      if (!section.open) return;
+
+      content.replaceChildren();
+
+      const owned = Array.isArray(data?.owned)
+        ? data.owned
+        : [];
+
+      if (!owned.length) {
+        status.textContent = "No namecards owned yet.";
+        content.appendChild(status);
+        return;
+      }
+
+      for (const cardId of owned) {
+        const item = document.createElement("div");
+        item.className = "solar-settings-coming";
+
+        const name = cardId === "solar_tempest"
+          ? "⚡ Solar Tempest"
+          : cardId.replaceAll("_", " ");
+
+        item.textContent = name + (
+          data.equipped === cardId
+            ? " — Equipped"
+            : " — Owned"
+        );
+
+        content.appendChild(item);
+      }
+
+    } catch (error) {
+      console.warn("[Inventory]", error);
+
+      status.textContent =
+        "Could not load inventory: " + error.message;
+
+      content.replaceChildren(status);
+    }
+  });
+})();
+
