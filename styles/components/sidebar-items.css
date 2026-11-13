@@ -1,0 +1,69 @@
+/* Room and user items */
+
+.user_item,
+.room_item {
+    cursor: pointer;
+    min-width: 0;
+    margin-bottom: 3px;
+    padding: 7px 9px;
+
+    border-radius: 6px;
+    color: var(--text-muted);
+
+    font-size: 13px;
+    line-height: 1.5;
+
+    transition:
+        color 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.room_item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px;
+
+    font-size: 13px;
+}
+
+.room_item .name {
+    float: none !important;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.room_item .close {
+    float: none !important;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+
+    width: 22px;
+    height: 22px;
+    opacity: 0.55;
+}
+
+.room_item .close:hover {
+    opacity: 1;
+}
+
+.room_item .close svg {
+    width: 16px;
+    height: 16px;
+}
+
+.room_item:hover,
+.user_item:hover {
+    color: var(--text-main);
+    background: var(--bg-hover);
+}
+
+.room_item .name[style*="4, 221, 250"],
+.room_item .name[style*="165, 160, 255"] {
+    color: var(--active-color) !important;
+}
+

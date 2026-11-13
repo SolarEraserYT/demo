@@ -1,0 +1,55 @@
+/* Responsive layout */
+
+@media (max-width: 760px) {
+    .container {
+        grid-template-columns: minmax(85px, 0.7fr) minmax(0, 3fr)
+            minmax(100px, 1fr);
+    }
+
+    .left,
+    .right {
+        padding: 8px 5px;
+    }
+
+    .messages {
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+
+    .room_item,
+    .user_item {
+        padding: 6px;
+        font-size: 12px;
+    }
+
+    .bottom {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        grid-template-columns: 76px minmax(0, 1fr) 95px;
+    }
+
+    .messages {
+        padding: 10px 7px;
+    }
+
+    .message_item .time {
+        font-size: 10px;
+    }
+
+    .message_item .nick {
+        margin-left: 2px;
+    }
+
+    .message_item .message {
+        margin-left: 3px !important;
+    }
+
+    .modal_content {
+        padding: 18px;
+    }
+}
+

@@ -79,6 +79,28 @@ jobs:
           path.write_text(html, encoding="utf-8")
           PY
 
+          # Bundle ordered core CSS for production (avoids extra CSS requests).
+          python3 - <<'PYCSS'
+          from pathlib import Path
+          import re
+
+          root = Path("_site")
+          entry = root / "style.css"
+          manifest = entry.read_text(encoding="utf-8")
+          files = re.findall(r'^@import url\("\./([^"\n]+)"\);$', manifest, re.MULTILINE)
+          if len(files) != 14:
+              raise RuntimeError(f"Expected 14 core CSS imports, got {len(files)}")
+
+          result = []
+          for name in files:
+              if not name.startswith("styles/") or ".." in Path(name).parts:
+                  raise RuntimeError(f"Unexpected stylesheet path: {name}")
+              path = root / name
+              if not path.is_file():
+                  raise RuntimeError(f"Missing stylesheet: {name}")
+              result.append(path.read_text(encoding="utf-8"))
+          entry.write_text("".join(result), encoding="utf-8")
+          PYCSS
           sed -i "s|\.css\");|.css?v=${VERSION}\");|g" _site/styles/cosmetics/index.css
           touch _site/.nojekyll
 

@@ -1,0 +1,263 @@
+/* ==========================================
+   STEP 136BN — REMEMBRANCE GREEN ELECTRIC THEME
+   ========================================== */
+
+body.room-remembrance {
+  --remembrance-electric: #39ff88;
+  --remembrance-electric-rgb: 57, 255, 136;
+}
+
+/* Green electric borders */
+body.room-remembrance
+:is(.container, .right, .bottom) {
+  border-color: var(--remembrance-electric);
+
+  box-shadow:
+    inset 0 0 8px rgba(57, 255, 136, 0.15),
+    0 0 12px rgba(57, 255, 136, 0.35);
+
+  animation: remembrancePulse 3s ease-in-out infinite;
+}
+
+/* Green glow around message input */
+body.room-remembrance .send_area {
+  box-shadow:
+    inset 0 0 6px rgba(57, 255, 136, 0.15),
+    0 0 10px rgba(57, 255, 136, 0.3);
+}
+
+@keyframes remembrancePulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 5px rgba(57, 255, 136, 0.12),
+      0 0 8px rgba(57, 255, 136, 0.25);
+  }
+
+  50% {
+    box-shadow:
+      inset 0 0 12px rgba(57, 255, 136, 0.25),
+      0 0 20px rgba(57, 255, 136, 0.55);
+  }
+}
+
+/* Keep green theme for staff, overriding their usual
+   red/purple/yellow borders inside remembrance */
+body.room-remembrance:is(
+  .staff-owner,
+  .staff-admin,
+  .staff-manager
+) {
+  --staff-electric: #39ff88;
+  --staff-electric-rgb: 57, 255, 136;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  body.room-remembrance
+  :is(.container, .right, .bottom) {
+    animation: none;
+  }
+}
+
+/* ==========================================
+   STEP 136BO — REMEMBRANCE RGB USERNAMES
+   ========================================== */
+
+/* Rainbow glow for every user in remembrance */
+body.room-remembrance .right .name {
+  color: #ffffff !important;
+
+  background: linear-gradient(
+    90deg,
+    #ff3355,
+    #ffcc00,
+    #39ff88,
+    #00ccff,
+    #b45cff,
+    #ff3355
+  );
+
+  background-size: 300% 100%;
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  animation: remembranceRainbow 5s linear infinite;
+
+  /* Soft green glow — keeps usernames readable */
+filter:
+  drop-shadow(0 0 1px rgba(57, 255, 136, 0.35));
+}
+
+/* Move rainbow colors across usernames */
+@keyframes remembranceRainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 300% 50%;
+  }
+}
+
+/* Respect reduced-motion settings */
+@media (prefers-reduced-motion: reduce) {
+  body.room-remembrance .right .name {
+    animation: none;
+  }
+}
+
+/* STEP 136BR — EmuChat-style remembrance glow */
+
+body.room-remembrance .right .name.chat-glow,
+body.room-remembrance .messages .nick.chat-glow {
+  text-shadow: none !important;
+
+  filter:
+    drop-shadow(0 0 1.5px #1eff00)
+    drop-shadow(0 0 1.5px #1eff00) !important;
+
+  animation: none !important;
+}
+
+/* ==========================================
+   STEP 136BS — SOFT RGB GLOW
+   ========================================== */
+
+/* Override the old green glow */
+body.room-remembrance .right .name,
+body.room-remembrance .right .name.chat-glow,
+body.room-remembrance .messages .nick,
+body.room-remembrance .messages .nick.chat-glow {
+  text-shadow: none !important;
+
+  /* RGB colors move across the letters */
+  background: linear-gradient(
+    124deg,
+    #ff2400, #ff4a00, #e8b71d,
+    #e3e81d, #a8e81d, #1de840,
+    #1de880, #1ddde8, #1d8fe8,
+    #2b1de8, #801de8, #dd00f3,
+    #ff24f3
+  );
+
+  background-size: 300% 100% !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+
+  /* EmuChat-style faint white glow */
+filter:
+  drop-shadow(0 0 1px rgba(255, 255, 255, 0.65))
+  drop-shadow(0 0 2px rgba(255, 255, 255, 0.18)) !important;
+
+  animation: remembranceRGB 6.5s linear infinite alternate !important;
+}
+
+/* Cycle the full rainbow gradient across usernames */
+
+/* STEP 136CE — Seamless RGB color cycling */
+@keyframes remembranceRGB {
+  from {
+    background-position: 0% 50%;
+  }
+
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  body.room-remembrance .right .name {
+    animation: none !important;
+  }
+}
+
+/* ==========================================
+   STEP 136CH — REMEMBRANCE MESSAGE GLOW
+   ========================================== */
+
+body.room-remembrance .messages .message_item .message {
+  text-shadow:
+    0 0 2px var(--remembrance-message-color, #ffffff),
+    0 0 5px var(--remembrance-message-color, #ffffff);
+}
+
+/* ==========================================
+   STEP 136CK — REMEMBRANCE PARTICLES
+   ========================================== */
+
+/* Floating particles behind the chat messages */
+body.room-remembrance .messages {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Two layers of floating electric particles */
+body.room-remembrance .messages::before,
+body.room-remembrance .messages::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+
+  background-image:
+    radial-gradient(circle, #39ff88 1.5px, transparent 3px),
+    radial-gradient(circle, #9affc2 1px, transparent 2.5px),
+    radial-gradient(circle, #00ff66 1px, transparent 2px);
+
+  background-size:
+    145px 190px,
+    210px 250px,
+    275px 320px;
+
+  background-position:
+    15px 25px,
+    85px 120px,
+    140px 70px;
+
+  background-repeat: repeat;
+
+  opacity: 0.35;
+
+  filter: drop-shadow(0 0 4px #39ff88);
+
+  animation: remembranceParticles 18s linear infinite;
+}
+
+/* Second layer moves at a different speed */
+body.room-remembrance .messages::after {
+  opacity: 0.2;
+  transform: scale(1.05);
+  animation-duration: 29s;
+  animation-direction: reverse;
+}
+
+/* Smooth upward particle movement */
+@keyframes remembranceParticles {
+  from {
+    background-position:
+      15px 25px,
+      85px 120px,
+      140px 70px;
+  }
+
+  to {
+    background-position:
+      15px -735px,
+      85px -880px,
+      140px -1210px;
+  }
+}
+
+/* Accessibility: disable motion when requested */
+@media (prefers-reduced-motion: reduce) {
+  body.room-remembrance .messages::before,
+  body.room-remembrance .messages::after {
+    animation: none;
+  }
+}
+

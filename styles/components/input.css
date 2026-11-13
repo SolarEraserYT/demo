@@ -1,0 +1,62 @@
+/* Message input footer */
+
+.bottom {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    padding: 10px 14px;
+
+    background: var(--bg-panel);
+    border: none;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.send_area {
+    float: none;
+    flex: 1;
+    width: 0;
+    height: 40px;
+
+    padding: 0 13px !important;
+
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 8px;
+
+    background: var(--bg-input);
+    color: var(--text-main);
+
+    font-size: 14px;
+}
+
+.send_area:focus {
+    border-color: var(--accent) !important;
+}
+
+.send_button {
+    float: none;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+
+    padding: 0;
+    border-radius: 8px;
+
+    background: var(--button-background);
+}
+
+.send_button:hover {
+    background: var(--accent-hover);
+}
+
+.send_button svg {
+    width: 18px;
+    height: 18px;
+}
+
