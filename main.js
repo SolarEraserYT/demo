@@ -2271,62 +2271,18 @@ attachColorPointer(hueBar, event => {
 // --------------------------------------------------
 // SETTINGS GEAR
 // --------------------------------------------------
-
+// The separate Settings panel owns layout and theme controls.
+// The existing color picker (and its server save logic) is preserved.
 const settingsGear = document.querySelector(
   '.menu_button[data-target="settings"]'
 );
-
-function positionColorMenu() {
-  if (!settingsGear) return;
-
-  const rect = settingsGear.getBoundingClientRect();
-
-  colorMenu.style.left =
-    Math.max(8, rect.left) + "px";
-
-  colorMenu.style.top =
-    Math.max(8, rect.bottom + 5) + "px";
-}
-
 if (settingsGear) {
   settingsGear.addEventListener("click", event => {
     event.preventDefault();
     event.stopPropagation();
-
-    if (colorMenu.style.display !== "none") {
-      colorMenu.style.display = "none";
-      closeColorPopup();
-      return;
-    }
-
-    positionColorMenu();
-    updateColorSlotOptions();
-
-    colorSelect.value = "new";
-
-    setPickerHex(
-      profile?.nickname_color || "#FFFFFF"
-    );
-
-    colorMenu.style.display = "block";
+    window.SolarSettingsPanel?.toggle();
   });
 }
-
-document.addEventListener("click", event => {
-  if (
-    !colorMenu.contains(event.target) &&
-    !settingsGear?.contains(event.target)
-  ) {
-    colorMenu.style.display = "none";
-    closeColorPopup();
-  }
-});
-
-window.addEventListener("resize", () => {
-  if (colorMenu.style.display !== "none") {
-    positionColorMenu();
-  }
-});
 
 // --------------------------------------------------
 // START CHAT
