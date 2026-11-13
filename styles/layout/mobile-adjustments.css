@@ -1,0 +1,48 @@
+/* STEP 123A — Mobile chat layout improvements */
+
+@media (max-width: 760px) {
+  .messages {
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 10px 8px;
+  }
+
+  .message_item {
+    padding: 2px 0;
+  }
+
+  .message_item .time {
+    font-size: 9px;
+  }
+
+  .message_item .nick {
+    font-size: 12px;
+  }
+
+  .message_item .message {
+    font-size: 12px;
+  }
+
+  .right {
+    padding: 8px 4px;
+  }
+
+  .right .user_item {
+    padding: 4px 2px !important;
+    font-size: 11px;
+  }
+
+  .right .name {
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .right select {
+    width: 100%;
+    font-size: 11px;
+    padding: 6px 2px !important;
+  }
+}
+

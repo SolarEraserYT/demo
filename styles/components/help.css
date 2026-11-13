@@ -1,0 +1,37 @@
+/* Step 129B — EmuChat-style /help */
+
+.chat-help-line {
+  padding: 1px 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  color: #ff9cdb;
+}
+
+.chat-help-time {
+  color: #8da5ff;
+  margin-right: 5px;
+}
+
+.chat-help-heading {
+  color: #ff75d1;
+  font-weight: 700;
+  margin-right: 5px;
+  text-shadow:
+    0 0 4px #ff4bc4,
+    0 0 9px #ff4bc4,
+    0 0 15px #ff4bc4;
+}
+
+.chat-help-command {
+  display: inline;
+  color: #ff9cdb;
+  margin-right: 5px;
+  cursor: pointer;
+  text-shadow: none;
+}
+
+.chat-help-command:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}

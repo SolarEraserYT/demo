@@ -1,0 +1,38 @@
+/* ------------------------------------------
+   SIMPLE EMUCHAT-STYLE HOVER CARDS
+------------------------------------------ */
+
+.chat-hover-card {
+  position: fixed;
+  z-index: 99999;
+
+  background: #302330;
+  border: 1px solid #765079;
+  border-radius: 2px;
+
+  color: #f0b5ed;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1.45;
+
+  padding: 6px 8px;
+  width: max-content;
+  max-width: min(350px, calc(100vw - 12px));
+
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+
+  pointer-events: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.chat-hover-card[hidden] {
+  display: none !important;
+}
+
+/* Keep nickname hover targets easy to identify */
+.messages .nick[data-account-id],
+.right .name[data-account-id] {
+  cursor: pointer;
+}
+
