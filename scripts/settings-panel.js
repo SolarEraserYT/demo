@@ -1117,40 +1117,15 @@
 
   style.textContent = `
     
-/* EmuChat-style text shadow */
+
+/* SolarEraser — Dark text depth, no glow */
+
 html.solar-text-shadow-enabled body {
   text-shadow:
-    1px 1px 1px rgba(0, 0, 0, .95),
-    0 0 2px rgba(230, 235, 255, .30);
-}
-
-/* Stronger color-matched glow for chat text */
-html.solar-text-shadow-enabled
-.messages .message_item > .time,
-
-html.solar-text-shadow-enabled
-.messages .message_item > .level,
-
-html.solar-text-shadow-enabled
-.messages .message_item:not(.solar-server-line)
-> .message:not(.solar-live-glitch),
-
-html.solar-text-shadow-enabled
-.messages .message_item > .nick:not(.chat-glow):not(.solar-prism-username),
-
-html.solar-text-shadow-enabled
-.right .user_item:not(.nameplate-red-void)
-.name:not(.chat-glow):not(.solar-prism-username),
-
-html.solar-text-shadow-enabled
-.right select,
-
-html.solar-text-shadow-enabled
-.send_area {
-  text-shadow:
-    0 0 2px currentColor,
-    0 0 5px currentColor,
-    1px 1px 2px rgba(0, 0, 0, .95);
+    -1px -1px 0 rgba(0, 0, 0, .65),
+    1px 1px 0 #000000,
+    2px 2px 1px rgba(0, 0, 0, .95),
+    3px 3px 2px rgba(0, 0, 0, .75);
 }
 
 
