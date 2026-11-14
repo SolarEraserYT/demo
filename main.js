@@ -1097,7 +1097,254 @@ if (
   }
 
   /* END SOLAR TEMPEST SYNC */
+  if (!document.getElementById("solar-tempest-style")) {
+    const style = document.createElement("style");
+    style.id = "solar-tempest-style";
+    style.textContent = `
+      .nameplate-solar-tempest {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 240, 190, 0.18);
+        background:
+          radial-gradient(circle at 18% 50%, rgba(255, 70, 70, 0.24), transparent 22%),
+          radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.13), transparent 18%),
+          radial-gradient(circle at 78% 50%, rgba(255, 215, 70, 0.28), transparent 24%),
+          linear-gradient(90deg, rgba(255, 218, 90, 0.12), rgba(255,255,255,0.06) 40%, rgba(255, 90, 90, 0.12)),
+          linear-gradient(135deg, rgba(255, 230, 120, 0.12), rgba(255,255,255,0.02) 40%, rgba(255, 70, 70, 0.10));
+        box-shadow:
+          inset 0 0 18px rgba(255, 245, 180, 0.08),
+          inset 0 0 38px rgba(255, 90, 90, 0.08),
+          0 0 14px rgba(255, 230, 120, 0.08),
+          0 0 24px rgba(255, 70, 70, 0.08);
+        animation: solarTempestPulse 3.6s ease-in-out infinite;
+      }
 
+      .nameplate-solar-tempest > :not(.solar-tempest-effects) {
+        position: relative;
+        z-index: 3;
+      }
+
+      .nameplate-solar-tempest::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -65%;
+        width: 44%;
+        height: 190%;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(255,255,255,0.00) 20%,
+          rgba(255,255,255,0.95) 50%,
+          rgba(255,230,150,0.85) 62%,
+          rgba(255,110,110,0.60) 72%,
+          transparent 100%
+        );
+        filter: blur(2px);
+        transform: rotate(18deg);
+        opacity: 0.9;
+        pointer-events: none;
+        z-index: 4;
+        animation: solarTempestSweep 2.8s linear infinite;
+      }
+
+      .nameplate-solar-tempest::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        border: 1px solid rgba(255,255,255,0.26);
+        box-shadow:
+          inset 0 0 0 1px rgba(255,255,255,0.08),
+          0 0 8px rgba(255,255,255,0.08),
+          0 0 14px rgba(255, 230, 110, 0.10),
+          0 0 20px rgba(255, 70, 70, 0.10);
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      .solar-tempest-effects {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        border-radius: inherit;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .solar-tempest-flares,
+      .solar-tempest-flares::before,
+      .solar-tempest-flares::after {
+        position: absolute;
+        inset: 0;
+        content: "";
+        pointer-events: none;
+      }
+
+      .solar-tempest-flares {
+        background:
+          radial-gradient(circle at 18% 52%, rgba(255, 45, 45, 0.30), transparent 16%),
+          radial-gradient(circle at 30% 50%, rgba(255, 220, 90, 0.24), transparent 10%),
+          radial-gradient(circle at 52% 50%, rgba(255, 255, 255, 0.16), transparent 8%),
+          radial-gradient(circle at 76% 48%, rgba(255, 50, 50, 0.26), transparent 14%),
+          radial-gradient(circle at 86% 52%, rgba(255, 215, 120, 0.20), transparent 10%);
+        filter: blur(1px);
+        opacity: 0.95;
+        animation: solarTempestFlares 7s ease-in-out infinite;
+      }
+
+      .solar-tempest-flares::before {
+        background:
+          radial-gradient(circle at 22% 50%, rgba(255,255,255,0.75), transparent 1.2%),
+          radial-gradient(circle at 40% 45%, rgba(255,225,110,0.65), transparent 1.1%),
+          radial-gradient(circle at 58% 55%, rgba(255,90,90,0.55), transparent 1.0%),
+          radial-gradient(circle at 72% 48%, rgba(255,255,255,0.75), transparent 1.1%);
+        opacity: 0.85;
+        animation: solarTempestSparkles 5.5s linear infinite;
+      }
+
+      .solar-tempest-flares::after {
+        background:
+          radial-gradient(circle at 15% 50%, rgba(255,90,90,0.22), transparent 2.2%),
+          radial-gradient(circle at 38% 50%, rgba(255,255,255,0.20), transparent 1.6%),
+          radial-gradient(circle at 62% 50%, rgba(255,220,110,0.25), transparent 2.0%),
+          radial-gradient(circle at 84% 50%, rgba(255,90,90,0.20), transparent 1.8%);
+        filter: blur(2px);
+        animation: solarTempestDrift 4.8s ease-in-out infinite alternate;
+      }
+
+      .solar-tempest-electricity {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.96;
+        mix-blend-mode: screen;
+        z-index: 2;
+        animation: solarTempestElectricFlicker 0.8s steps(2, end) infinite;
+      }
+
+      .solar-tempest-electricity path {
+        stroke: rgba(255,255,255,0.98);
+        stroke-dasharray: 20 18;
+        stroke-dashoffset: 0;
+        filter:
+          drop-shadow(0 0 2px rgba(255,255,255,1))
+          drop-shadow(0 0 6px rgba(110,225,255,0.95))
+          drop-shadow(0 0 11px rgba(170,120,255,0.80))
+          drop-shadow(0 0 15px rgba(255,80,80,0.55));
+        animation:
+          solarLightningMove 1.15s linear infinite,
+          solarLightningPulse 0.45s steps(2, end) infinite;
+      }
+
+      @keyframes solarTempestPulse {
+        0%, 100% {
+          box-shadow:
+            inset 0 0 18px rgba(255, 245, 180, 0.08),
+            inset 0 0 38px rgba(255, 90, 90, 0.08),
+            0 0 14px rgba(255, 230, 120, 0.08),
+            0 0 24px rgba(255, 70, 70, 0.08);
+        }
+        50% {
+          box-shadow:
+            inset 0 0 24px rgba(255, 245, 180, 0.14),
+            inset 0 0 52px rgba(255, 90, 90, 0.14),
+            0 0 18px rgba(255, 230, 120, 0.14),
+            0 0 32px rgba(255, 70, 70, 0.12);
+        }
+      }
+
+      @keyframes solarTempestSweep {
+        0% {
+          left: -65%;
+          opacity: 0;
+        }
+        12% {
+          opacity: 0.95;
+        }
+        55% {
+          opacity: 0.95;
+        }
+        100% {
+          left: 130%;
+          opacity: 0;
+        }
+      }
+
+      @keyframes solarTempestFlares {
+        0%, 100% {
+          transform: scale(1) translateX(0);
+          opacity: 0.88;
+        }
+        50% {
+          transform: scale(1.03) translateX(4px);
+          opacity: 1;
+        }
+      }
+
+      @keyframes solarTempestSparkles {
+        0% {
+          transform: translateX(-8px);
+          opacity: 0.45;
+        }
+        50% {
+          opacity: 0.95;
+        }
+        100% {
+          transform: translateX(10px);
+          opacity: 0.35;
+        }
+      }
+
+      @keyframes solarTempestDrift {
+        0% {
+          transform: translateX(-6px) scale(1);
+        }
+        100% {
+          transform: translateX(8px) scale(1.08);
+        }
+      }
+
+      @keyframes solarTempestElectricFlicker {
+        0%, 100% {
+          opacity: 0.82;
+        }
+        35% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.72;
+        }
+        75% {
+          opacity: 1;
+        }
+      }
+
+      @keyframes solarLightningMove {
+        0% {
+          stroke-dashoffset: 46;
+          transform: translateX(-8px);
+        }
+        100% {
+          stroke-dashoffset: 0;
+          transform: translateX(8px);
+        }
+      }
+
+      @keyframes solarLightningPulse {
+        0%, 100% {
+          opacity: 0.68;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
 repaintVerifiedGlows();
 }
 
