@@ -5724,15 +5724,129 @@ line.dataset.solarWelcome = "true";
 
       if (error) throw error;
 
+      
       if (data === "ALREADY_ISSUED") {
-        privateWarning(
-          "Your account already has a recovery code. " +
-          "It has not been changed. For security, an " +
-          "existing code cannot be displayed again. " +
-          "Use the copy you saved when it was first issued."
+        // Older recovery codes were stored as hashes only.
+        // Register the saved code once to enable viewing it again.
+
+        const panel = document.createElement("div");
+        panel.className = "message_item solar-private-notice";
+
+        panel.style.cssText = `
+          padding: 12px;
+          margin: 8px 0;
+          border: 1px solid #5cbe92;
+          border-radius: 8px;
+          background: #10251c;
+          color: #d6ffe5;
+          font-size: 12px;
+        `;
+
+        const title = document.createElement("strong");
+        title.textContent = "🔐 Link your existing recovery code";
+
+        const explanation = document.createElement("p");
+        explanation.textContent =
+          "Your recovery code was created before repeat viewing " +
+          "was added. Enter your saved code once to enable viewing " +
+          "it whenever you use /recover_code. Your code won't change.";
+
+        const input = document.createElement("input");
+        input.type = "password";
+        input.placeholder = "Your existing 48-character code";
+        input.autocomplete = "off";
+        input.spellcheck = false;
+        input.maxLength = 48;
+
+        input.style.cssText = `
+          box-sizing: border-box;
+          display: block;
+          width: 100%;
+          padding: 9px;
+          margin: 10px 0;
+          background: #091810;
+          border: 1px solid #5cbe92;
+          border-radius: 6px;
+          color: white;
+          font-family: monospace;
+        `;
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "Save for Repeat Viewing";
+
+        button.style.cssText = `
+          padding: 8px 12px;
+          background: #194b32;
+          color: white;
+          border: 1px solid #5cbe92;
+          border-radius: 6px;
+          cursor: pointer;
+        `;
+
+        const status = document.createElement("p");
+        status.style.cssText = `
+          margin: 8px 0 0;
+          color: #b2ddc0;
+          font-size: 11px;
+        `;
+
+        button.addEventListener("click", async () => {
+          const savedCode = input.value.trim().toLowerCase();
+
+          if (!/^[0-9a-f]{48}$/.test(savedCode)) {
+            status.textContent =
+              "Enter your original 48-character recovery code.";
+            return;
+          }
+
+          input.disabled = true;
+          button.disabled = true;
+          status.textContent = "Verifying your code...";
+
+          try {
+            const { data: registered, error } =
+              await supabase.rpc(
+                "register_my_chat_recovery_code",
+                { p_code: savedCode }
+              );
+
+            if (error) throw error;
+
+            if (registered !== true) {
+              throw new Error("Registration unsuccessful");
+            }
+
+            input.value = "";
+            panel.remove();
+
+            // Show the saved code using the normal command.
+            await handleCommand("/recover_code");
+
+          } catch (error) {
+            input.value = "";
+            input.disabled = false;
+            button.disabled = false;
+
+            status.textContent =
+              "Could not register that code. " +
+              "Check your saved code and try again.";
+          }
+        });
+
+        panel.append(
+          title,
+          explanation,
+          input,
+          button,
+          status
         );
+
+        messages.appendChild(panel);
+        messages.scrollTop = messages.scrollHeight;
         return;
       }
+
 
       if (
         typeof data !== "string" ||
@@ -5803,10 +5917,12 @@ line.dataset.solarWelcome = "true";
       });
 
       const warning = document.createElement("p");
+      
       warning.textContent =
-        "Save this code somewhere private. " +
+        "Keep this recovery code private. " +
         "Anyone with it could recover your account. " +
-        "It will not be shown again.";
+        "You can view it again anytime using /recover_code.";
+
 
       warning.style.cssText = `
         margin: 10px 0 0;
