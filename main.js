@@ -972,8 +972,41 @@ if (
     for (const [accountId, row] of cardState.rows) {
       if (!row || !row.isConnected) continue;
 
-      const equipped =
-        cardState.equipped.get(accountId) === "solar_tempest";
+      
+      // Find this user's equipped calling card.
+      const cardId = cardState.equipped.get(accountId);
+
+      const equipped = cardId === "solar_tempest";
+
+      // Use the ORIGINAL animated WebP files.
+      const animatedUrl =
+        cardId === "blasted"
+          ? "/blasted.webp"
+          : cardId === "http_tactical"
+            ? "/http-tactical.webp"
+            : null;
+
+      if (animatedUrl) {
+        // Display the complete animation behind the name.
+        // Important prevents the normal hover background
+        // from covering the calling card.
+        row.style.setProperty(
+          "background",
+          `#100f14 url("${animatedUrl}") center / 100% 100% no-repeat`,
+          "important"
+        );
+
+        row.style.setProperty(
+          "min-height",
+          "40px",
+          "important"
+        );
+      } else {
+        // Restore the normal background or Solar Tempest.
+        row.style.removeProperty("background");
+        row.style.removeProperty("min-height");
+      }
+
 
       row.classList.toggle(
         "nameplate-solar-tempest",
@@ -1051,7 +1084,15 @@ if (
 
         cardState.equipped = new Map(
           (Array.isArray(data) ? data : [])
-            .filter(entry => entry.card_id === "solar_tempest")
+            
+            .filter(entry =>
+              [
+                "solar_tempest",
+                "blasted",
+                "http_tactical"
+              ].includes(entry.card_id)
+            )
+
             .map(entry => [
               String(entry.account_id),
               entry.card_id
