@@ -452,39 +452,62 @@
         item.className = "tempest-inventory-item";
 
         item.innerHTML = `
-          <div class="tempest-preview">
-            <div class="tempest-flares"></div>
+          
+<div class="nameplate-solar-tempest"
+     style="
+       position: relative;
+       isolation: isolate;
+       overflow: hidden;
+       display: flex;
+       align-items: center;
+       width: 100%;
+       min-height: 85px;
+       padding: 15px;
+       box-sizing: border-box;
+       border-radius: 12px;
+     ">
 
-            <svg class="tempest-electricity"
-                 viewBox="0 0 300 85"
-                 preserveAspectRatio="none"
-                 aria-hidden="true">
-              <path
-                d="M-5 39 L35 35 L57 15 L68 49
-                   L89 25 L119 43 L143 10
-                   L159 38 L198 22 L222 49
-                   L253 25 L305 33"
-                fill="none"
-                stroke="#ffffff"
-                stroke-width="1.7"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M-5 39 L35 35 L57 15 L68 49
-                   L89 25 L119 43 L143 10
-                   L159 38 L198 22 L222 49
-                   L253 25 L305 33"
-                fill="none"
-                stroke="#ffe565"
-                stroke-width="4"
-                opacity=".4"
-              />
-            </svg>
+  <!-- Exactly the same effect layers as the live card -->
+  <div class="solar-tempest-effects"
+       aria-hidden="true">
 
-            <span class="tempest-preview-name">
-              SolarEraser
-            </span>
-          </div>
+    <div class="solar-tempest-flares"></div>
+
+    <svg class="solar-tempest-electricity"
+         viewBox="0 0 300 50"
+         preserveAspectRatio="none"
+         aria-hidden="true">
+
+      <path
+        d="M-5 30 L30 25 L53 8 L69 36
+           L94 13 L118 30 L148 5
+           L162 30 L199 14 L226 37
+           L258 13 L305 25"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="1.6"
+        stroke-linejoin="round"
+      />
+    </svg>
+
+  </div>
+
+  <span class="name"
+        style="
+          position: relative;
+          z-index: 3;
+          font-size: 17px;
+          font-weight: 900;
+          color: #fff9d2;
+          text-shadow:
+            0 0 4px #fff,
+            0 0 11px #ffdf66,
+            0 0 20px #ffb023;
+        ">
+    SolarEraser
+  </span>
+
+</div>
 
           <div class="tempest-info">
             <strong>⚡ Solar Tempest</strong>
