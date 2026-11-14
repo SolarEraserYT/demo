@@ -33,10 +33,13 @@ jobs:
 
           VERSION="${GITHUB_SHA:0:12}"
 
-          mkdir -p _site
-          cp index.html main.js style.css CNAME _site/
+          
+          mkdir -p _site/icons
+          cp index.html main.js style.css CNAME manifest.json _site/
+          cp icon-192.png icon-512.png _site/icons/
           cp -R styles _site/
           cp -R scripts _site/
+
 
           printf '{\n  "version": "%s"\n}\n' \
             "$VERSION" > _site/version.json
