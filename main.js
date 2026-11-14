@@ -938,6 +938,166 @@ if (
     userNames.appendChild(item);
   }
 
+  /* ==========================================
+     SOLAR TEMPEST — EQUIPPED NAMECARD SYNC
+     ========================================== */
+
+  const cardState = renderUsers.solarCardState ??= {
+    equipped: new Map(),
+    rows: new Map(),
+    ids: [],
+    room: "",
+    signature: "",
+    loading: false,
+    lastFetch: 0,
+    timer: null,
+    fetch: null,
+    apply: null
+  };
+
+  // Connect each visible username row to its account ID.
+  cardState.rows = new Map(
+    sorted.map((person, index) => [
+      String(person.accountId),
+      userNames.children[index]
+    ])
+  );
+
+  cardState.ids = sorted.map(person =>
+    String(person.accountId)
+  );
+
+  // Apply only the card verified by Supabase.
+  cardState.apply = () => {
+    for (const [accountId, row] of cardState.rows) {
+      if (!row || !row.isConnected) continue;
+
+      const equipped =
+        cardState.equipped.get(accountId) === "solar_tempest";
+
+      row.classList.toggle(
+        "nameplate-solar-tempest",
+        equipped
+      );
+
+      let effects = row.querySelector(
+        ":scope > .solar-tempest-effects"
+      );
+
+      if (equipped && !effects) {
+        effects = document.createElement("div");
+        effects.className = "solar-tempest-effects";
+        effects.setAttribute("aria-hidden", "true");
+
+        effects.innerHTML = `
+          <div class="solar-tempest-flares"></div>
+
+          <svg
+            class="solar-tempest-electricity"
+            viewBox="0 0 300 50"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M-5 30 L30 25 L53 8 L69 36
+                 L94 13 L118 30 L148 5
+                 L162 30 L199 14 L226 37
+                 L258 13 L305 25"
+              fill="none"
+              stroke="#ffffff"
+              stroke-width="1.6"
+              stroke-linejoin="round"
+            />
+          </svg>
+        `;
+
+        row.insertBefore(effects, row.firstChild);
+      }
+
+      if (!equipped && effects) {
+        effects.remove();
+      }
+    }
+  };
+
+  // Keep the cosmetics in sync across all viewers.
+  if (!cardState.fetch) {
+    cardState.fetch = async () => {
+      if (
+        cardState.loading ||
+        !supabase ||
+        !channel ||
+        !presenceWorking ||
+        !cardState.ids.length
+      ) return;
+
+      const requestedRoom = String(currentRoomId);
+      const requestedIds = cardState.ids.slice(0, 200);
+
+      cardState.loading = true;
+      cardState.lastFetch = Date.now();
+
+      try {
+        const { data, error } = await supabase.rpc(
+          "get_visible_chat_namecards",
+          { p_account_ids: requestedIds }
+        );
+
+        if (error) throw error;
+
+        // Ignore replies from rooms we already left.
+        if (String(currentRoomId) !== requestedRoom) {
+          return;
+        }
+
+        cardState.equipped = new Map(
+          (Array.isArray(data) ? data : [])
+            .filter(entry => entry.card_id === "solar_tempest")
+            .map(entry => [
+              String(entry.account_id),
+              entry.card_id
+            ])
+        );
+
+        cardState.apply();
+
+      } catch (error) {
+        console.warn(
+          "[Solar Tempest] Could not sync namecards:",
+          error
+        );
+
+      } finally {
+        cardState.loading = false;
+      }
+    };
+
+    // Refresh periodically so Equip / Unequip
+    // becomes visible to other connected users.
+    cardState.timer = setInterval(() => {
+      if (channel && presenceWorking) {
+        void cardState.fetch();
+      }
+    }, 12000);
+  }
+
+  // Restore the correct card after every user-list redraw.
+  cardState.apply();
+
+  const roomKey = String(currentRoomId);
+  const signature = [...cardState.ids].sort().join("|");
+
+  if (
+    roomKey !== cardState.room ||
+    signature !== cardState.signature ||
+    Date.now() - cardState.lastFetch >= 12000
+  ) {
+    cardState.room = roomKey;
+    cardState.signature = signature;
+    void cardState.fetch();
+  }
+
+  /* END SOLAR TEMPEST SYNC */
+
 repaintVerifiedGlows();
 }
 
