@@ -481,11 +481,76 @@
             ? "Owned — Premium animated calling card"
             : "Owned — SolarCoin animated calling card";
 
+          
           info.append(title, description);
           item.append(preview, info);
 
+          // EQUIP / UNEQUIP FOR ANIMATED CARDS
+          const equipped = data.equipped === cardId;
+
+          const actions = document.createElement("div");
+          actions.className = "tempest-actions";
+
+          const equip = document.createElement("button");
+          equip.type = "button";
+          equip.className = "tempest-action";
+          equip.textContent = equipped
+            ? "Equipped ✓"
+            : "Equip";
+          equip.disabled = equipped;
+
+          const unequip = document.createElement("button");
+          unequip.type = "button";
+          unequip.className = "tempest-action secondary";
+          unequip.textContent = "Unequip";
+          unequip.disabled = !equipped;
+
+          const message = document.createElement("div");
+          message.className = "tempest-status";
+          message.textContent = equipped
+            ? "Currently equipped"
+            : "Owned — not equipped";
+
+          actions.append(equip, unequip);
+          item.append(actions, message);
+
+          async function saveCard(nextCard) {
+            equip.disabled = true;
+            unequip.disabled = true;
+            message.textContent = "Saving...";
+
+            try {
+              const { error } = await supabase.rpc(
+                "set_my_chat_namecard",
+                { p_card_id: nextCard }
+              );
+
+              if (error) throw error;
+
+              await refreshInventory();
+
+            } catch (error) {
+              console.warn("[Namecards]", error);
+
+              message.textContent =
+                "Could not save: " + error.message;
+
+              equip.disabled = equipped;
+              unequip.disabled = !equipped;
+            }
+          }
+
+          equip.addEventListener("click", () => {
+            saveCard(cardId);
+          });
+
+          unequip.addEventListener("click", () => {
+            saveCard(null);
+          });
+
           content.appendChild(item);
           continue;
+
         }
 
         if (cardId !== "solar_tempest") {
