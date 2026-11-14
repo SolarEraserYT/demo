@@ -438,6 +438,56 @@
       }
 
       for (const cardId of owned) {
+         
+        // BLASTED + HTTP TACTICAL
+        // Display their original animated WebP files.
+        if (
+          cardId === "blasted" ||
+          cardId === "http_tactical"
+        ) {
+          const isBlasted = cardId === "blasted";
+
+          const item = document.createElement("div");
+          item.className = "tempest-inventory-item";
+
+          const preview = document.createElement("img");
+
+          preview.src = isBlasted
+            ? "/blasted.webp"
+            : "/http-tactical.webp";
+
+          preview.alt = isBlasted
+            ? "Blasted animated calling card"
+            : "HTTP Tactical animated calling card";
+
+          // Preserve the full original animation.
+          preview.style.cssText = `
+            display: block;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+          `;
+
+          const info = document.createElement("div");
+          info.className = "tempest-info";
+
+          const title = document.createElement("strong");
+          title.textContent = isBlasted
+            ? "💎 Blasted"
+            : "🪙 HTTP Tactical";
+
+          const description = document.createElement("small");
+          description.textContent = isBlasted
+            ? "Owned — Premium animated calling card"
+            : "Owned — SolarCoin animated calling card";
+
+          info.append(title, description);
+          item.append(preview, info);
+
+          content.appendChild(item);
+          continue;
+        }
+
         if (cardId !== "solar_tempest") {
           const other = document.createElement("div");
           other.className = "solar-settings-coming";
