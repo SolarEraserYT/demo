@@ -35,7 +35,9 @@ jobs:
 
           
           mkdir -p _site/icons
-          cp index.html main.js style.css CNAME manifest.json _site/
+          
+          cp index.html main.js style.css CNAME manifest.json blasted.webp _site/
+
           cp icon-192.png icon-512.png _site/icons/
           cp -R styles _site/
           cp -R scripts _site/
