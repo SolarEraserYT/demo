@@ -2741,8 +2741,10 @@ async function startChat() {
       throw new Error("Guest login failed.");
     }
 
+    
     authUserId = user.id;
 
+    // Load the account connected to this browser.
     const { data, error: profileError } =
       await supabase.rpc("my_chat_profile");
 
@@ -2750,9 +2752,83 @@ async function startChat() {
 
     profile = getProfile(data);
 
+    // If the old anonymous login no longer has a chat
+    // account (for example, after /recover on another
+    // device), automatically create a fresh guest.
+    if (!profile?.account_id) {
+
+      console.warn(
+        "[Chat] Login has no chat profile. " +
+        "Creating a fresh guest account."
+      );
+
+      setStatus("Creating a new guest account...");
+
+      // Keep non-anonymous logins untouched.
+      if (user.is_anonymous !== true) {
+        throw new Error(
+          "Chat profile not found for this login."
+        );
+      }
+
+      // Clear only this browser's old session.
+      const { error: signOutError } =
+        await supabase.auth.signOut({
+          scope: "local"
+        });
+
+      if (signOutError) throw signOutError;
+
+      // Create a completely new anonymous login.
+      const {
+        data: guestData,
+        error: guestError
+      } = await supabase.auth.signInAnonymously();
+
+      if (guestError) throw guestError;
+
+      const newUserId = guestData?.user?.id;
+
+      if (!newUserId || newUserId === user.id) {
+        throw new Error(
+          "Could not create a new guest login."
+        );
+      }
+
+      authUserId = newUserId;
+
+      // Load the fresh guest's chat account.
+      const {
+        data: newProfileData,
+        error: newProfileError
+      } = await supabase.rpc("my_chat_profile");
+
+      if (newProfileError) throw newProfileError;
+
+      profile = getProfile(newProfileData);
+
+      if (!profile?.nickname || !profile?.account_id) {
+        throw new Error(
+          "New guest profile could not be created."
+        );
+      }
+
+      console.log(
+        "[Chat] Fresh guest created:",
+        profile.nickname
+      );
+
+      privateWarning(
+        "Your previous login is no longer linked " +
+        "to a chat account. A new guest account " +
+        "has been created automatically."
+      );
+    }
+
     if (!profile?.nickname || !profile?.account_id) {
       throw new Error("Chat profile not found.");
     }
+
 // STEP 117L-3 — Check account ban status on startup.
 const { data: banStatus, error: banStatusError } =
   await supabase.rpc("my_chat_ban_status");
