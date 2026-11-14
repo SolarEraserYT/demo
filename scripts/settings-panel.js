@@ -60,6 +60,51 @@
           <span class="solar-settings-chevron" aria-hidden="true">›</span></summary>
         <div class="solar-settings-section-content"><div class="solar-settings-coming">Coming later — no inventory system is connected yet.</div></div>
       </details>
+      
+      <!-- USERNAME EFFECTS -->
+      <details class="solar-settings-section"
+               id="solar-settings-username-effects">
+        <summary>
+          <span class="solar-settings-icon"
+                aria-hidden="true">✧</span>
+          <span class="solar-settings-label">
+            <strong>Username Effects</strong>
+            <small>Equip animated username cosmetics</small>
+          </span>
+          <span class="solar-settings-chevron"
+                aria-hidden="true">›</span>
+        </summary>
+
+        <div class="solar-settings-section-content">
+          <div id="solar-username-effects-list"
+               class="solar-settings-coming">
+            Username effect inventory is being connected.
+          </div>
+        </div>
+      </details>
+
+      <!-- TEXT EFFECTS -->
+      <details class="solar-settings-section"
+               id="solar-settings-text-effects">
+        <summary>
+          <span class="solar-settings-icon"
+                aria-hidden="true">⌁</span>
+          <span class="solar-settings-label">
+            <strong>Text Effects</strong>
+            <small>Equip animated message effects</small>
+          </span>
+          <span class="solar-settings-chevron"
+                aria-hidden="true">›</span>
+        </summary>
+
+        <div class="solar-settings-section-content">
+          <div id="solar-text-effects-list"
+               class="solar-settings-coming">
+            Text effect inventory is being connected.
+          </div>
+        </div>
+      </details>
+
       <details class="solar-settings-section" id="solar-settings-advanced">
         <summary><span class="solar-settings-icon" aria-hidden="true">⚙</span>
           <span class="solar-settings-label"><strong>Advanced</strong><small>More customization over time</small></span>
