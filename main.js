@@ -5685,3 +5685,161 @@ line.dataset.solarWelcome = "true";
     "[SolarEraser Chat] Step 130A /topic loaded!"
   );
 })();
+
+
+/* ==========================================
+   SOLARERASER — PERMANENT RECOVERY CODE
+   Step 4: /recover_code
+   ========================================== */
+
+(() => {
+  "use strict";
+
+  const previousHandleCommand = handleCommand;
+  let recoveryRequestRunning = false;
+
+  handleCommand = async function(content) {
+    if (!/^\/recover_code\s*$/i.test(content)) {
+      return previousHandleCommand(content);
+    }
+
+    if (recoveryRequestRunning) {
+      privateWarning(
+        "Recovery code request already in progress."
+      );
+      return;
+    }
+
+    if (!supabase || !profile) {
+      privateWarning("Connect to chat first.");
+      return;
+    }
+
+    recoveryRequestRunning = true;
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "issue_chat_recovery_code"
+      );
+
+      if (error) throw error;
+
+      if (data === "ALREADY_ISSUED") {
+        privateWarning(
+          "Your account already has a recovery code. " +
+          "It has not been changed. For security, an " +
+          "existing code cannot be displayed again. " +
+          "Use the copy you saved when it was first issued."
+        );
+        return;
+      }
+
+      if (
+        typeof data !== "string" ||
+        !/^[0-9a-f]{48}$/.test(data)
+      ) {
+        throw new Error(
+          "Unexpected response from recovery system."
+        );
+      }
+
+      // This message exists ONLY in your browser.
+      // Nothing is sent to the public chat.
+      const notice = document.createElement("div");
+      notice.className =
+        "message_item solar-private-notice";
+
+      notice.style.cssText = `
+        padding: 12px;
+        margin: 8px 0;
+        border: 1px solid #5cbe92;
+        border-radius: 8px;
+        background: #10251c;
+        color: #d6ffe5;
+        font-size: 12px;
+      `;
+
+      const heading = document.createElement("strong");
+      heading.textContent =
+        "🔐 Your permanent recovery code";
+
+      const code = document.createElement("div");
+      code.textContent = data;
+      code.style.cssText = `
+        margin: 10px 0;
+        padding: 8px;
+        border-radius: 5px;
+        background: #091810;
+        color: #ffffff;
+        font-family: monospace;
+        overflow-wrap: anywhere;
+        user-select: all;
+      `;
+
+      const copy = document.createElement("button");
+      copy.type = "button";
+      copy.textContent = "Copy Recovery Code";
+
+      copy.style.cssText = `
+        padding: 7px 12px;
+        border-radius: 6px;
+        border: 1px solid #5cbe92;
+        background: #194b32;
+        color: white;
+        cursor: pointer;
+      `;
+
+      copy.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(
+            code.textContent
+          );
+
+          copy.textContent = "Copied ✓";
+        } catch {
+          copy.textContent =
+            "Select the code above to copy";
+        }
+      });
+
+      const warning = document.createElement("p");
+      warning.textContent =
+        "Save this code somewhere private. " +
+        "Anyone with it could recover your account. " +
+        "It will not be shown again.";
+
+      warning.style.cssText = `
+        margin: 10px 0 0;
+        color: #b2ddc0;
+        font-size: 11px;
+      `;
+
+      notice.append(
+        heading,
+        code,
+        copy,
+        warning
+      );
+
+      messages.appendChild(notice);
+      messages.scrollTop = messages.scrollHeight;
+
+    } catch (error) {
+      console.warn(
+        "[Recovery Code] Request failed."
+      );
+
+      privateWarning(
+        "Could not get recovery code: " +
+        (error.message || "Unknown error")
+      );
+
+    } finally {
+      recoveryRequestRunning = false;
+    }
+  };
+
+  console.log(
+    "[SolarEraser] /recover_code loaded."
+  );
+})();
