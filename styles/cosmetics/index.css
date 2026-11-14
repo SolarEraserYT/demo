@@ -7,3 +7,148 @@
  */
 
 @import url("./red-void.css");
+
+
+/* ==========================================
+   SOLAR TEMPEST — DUAL COLOR LIGHTNING
+   Applies to live card AND inventory preview
+   ========================================== */
+
+/* Electric blue and purple lightning */
+.nameplate-solar-tempest
+.solar-tempest-effects::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+
+  background: linear-gradient(
+    90deg,
+    #16dfff 0%,
+    #bfffff 18%,
+    #ffffff 35%,
+    #996aff 55%,
+    #e7aeff 73%,
+    #27eaff 100%
+  );
+
+  clip-path: polygon(
+    0 52%, 12% 47%, 19% 55%,
+    27% 19%, 32% 52%, 41% 36%,
+    47% 67%, 57% 27%, 63% 54%,
+    74% 39%, 81% 63%, 90% 33%,
+    100% 48%,
+
+    100% 54%, 90% 40%, 81% 71%,
+    74% 46%, 63% 61%, 57% 34%,
+    47% 75%, 41% 43%, 32% 60%,
+    27% 27%, 19% 63%, 12% 54%,
+    0 59%
+  );
+
+  filter:
+    drop-shadow(0 0 3px #ffffff)
+    drop-shadow(0 0 7px #36dbff)
+    drop-shadow(0 0 13px #9865ff);
+
+  opacity: 0;
+  animation: tempest-blue-strike 4.6s steps(1) infinite;
+}
+
+/* Red and golden lightning */
+.nameplate-solar-tempest
+.solar-tempest-effects::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+
+  background: linear-gradient(
+    90deg,
+    #ff3737,
+    #ff9d38,
+    #fff9d4,
+    #ffdf55,
+    #ff395b
+  );
+
+  clip-path: polygon(
+    0 31%, 15% 45%, 22% 20%,
+    29% 58%, 39% 35%, 48% 51%,
+    56% 24%, 65% 65%, 76% 42%,
+    88% 54%, 100% 25%,
+
+    100% 34%, 88% 63%, 76% 50%,
+    65% 73%, 56% 33%, 48% 59%,
+    39% 43%, 29% 66%, 22% 29%,
+    15% 53%, 0 39%
+  );
+
+  filter:
+    drop-shadow(0 0 3px #ffffff)
+    drop-shadow(0 0 8px #ffbe43)
+    drop-shadow(0 0 14px #ff3333);
+
+  opacity: 0;
+  animation: tempest-red-strike 5.8s steps(1) infinite;
+}
+
+/* Random-looking electric flashes */
+@keyframes tempest-blue-strike {
+  0%, 13%, 16%, 41%, 44%,
+  69%, 73%, 100% {
+    opacity: 0;
+    transform: translateX(-8%) scaleY(.9);
+  }
+
+  14%, 42%, 70% {
+    opacity: 1;
+    transform: translateX(0) scaleY(1);
+  }
+
+  15%, 43%, 71% {
+    opacity: .35;
+    transform: translateX(2%) scaleY(1.08);
+  }
+
+  72% {
+    opacity: 1;
+    transform: translateX(-3%) scaleY(.95);
+  }
+}
+
+@keyframes tempest-red-strike {
+  0%, 24%, 28%, 56%, 60%,
+  88%, 92%, 100% {
+    opacity: 0;
+    transform: translateX(7%) scaleY(.85);
+  }
+
+  25%, 57%, 89% {
+    opacity: 1;
+    transform: translateX(0) scaleY(1);
+  }
+
+  26%, 58%, 90% {
+    opacity: .25;
+    transform: translateX(-2%) scaleY(1.1);
+  }
+
+  27%, 59%, 91% {
+    opacity: .9;
+    transform: translateX(2%) scaleY(.95);
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .nameplate-solar-tempest
+  .solar-tempest-effects::before,
+  .nameplate-solar-tempest
+  .solar-tempest-effects::after {
+    animation: none !important;
+    opacity: 0;
+  }
+}
