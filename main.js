@@ -979,12 +979,14 @@ if (
       const equipped = cardId === "solar_tempest";
 
       // Use the ORIGINAL animated WebP files.
-      const animatedUrl =
-        cardId === "blasted"
-          ? "/blasted.webp"
-          : cardId === "http_tactical"
-            ? "/http-tactical.webp"
-            : null;
+      
+const animatedUrl =
+  cardId === "blasted"
+    ? "/blasted.webp"
+    : cardId === "http_tactical"
+      ? "/iridescent_damascus_calling_card.gif"
+      : null;
+
 
       if (animatedUrl) {
         // Display the complete animation behind the name.
