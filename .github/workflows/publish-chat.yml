@@ -37,7 +37,9 @@ jobs:
           mkdir -p _site/icons
           
           
-          cp index.html main.js style.css CNAME manifest.json blasted.webp http-tactical.webp _site/
+          
+         cp index.html main.js style.css CNAME manifest.json blasted.webp http-tactical.webp iridescent_damascus_calling_card.gif _site/
+
 
           cp icon-192.png icon-512.png _site/icons/
           cp -R styles _site/
