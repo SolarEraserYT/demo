@@ -974,9 +974,17 @@ if (
 
       
       // Find this user's equipped calling card.
-      const cardId = cardState.equipped.get(accountId);
+      
+const cardId = cardState.equipped.get(accountId);
 
-      const equipped = cardId === "solar_tempest";
+// Give HTTP Tactical the normal rounded
+// calling-card container, like Red Void.
+row.classList.toggle(
+  "nameplate-http-tactical",
+  cardId === "http_tactical"
+);
+
+const equipped = cardId === "solar_tempest";
 
       // Use the ORIGINAL animated WebP files.
       
@@ -1000,7 +1008,7 @@ const animatedUrl =
 
         row.style.setProperty(
           "min-height",
-          "40px",
+          cardId === "http_tactical" ? "42px" : "40px",
           "important"
         );
       } else {
