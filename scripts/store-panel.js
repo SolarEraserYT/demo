@@ -2791,7 +2791,7 @@
     {
       id: "http_tactical",
       name: "HTTP Tactical",
-      image: "/http-tactical.webp",
+      image: "/iridescent_damascus_calling_card.gif",
       section: "solar-store-solarcoins",
       category: "SOLARCOIN CALLING CARD",
       price: "High coin price coming soon"
