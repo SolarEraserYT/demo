@@ -498,8 +498,8 @@
           const preview = document.createElement("img");
 
           preview.src = isBlasted
-            ? "/blasted.webp"
-            : "/http-tactical.webp";
+  ? "/blasted.webp"
+  : "/iridescent_damascus_calling_card.gif";
 
           preview.alt = isBlasted
             ? "Blasted animated calling card"
@@ -512,7 +512,9 @@
             height: auto;
             object-fit: contain;
           `;
-
+if (!isBlasted) {
+  preview.style.borderRadius = "12px";
+}
           const info = document.createElement("div");
           info.className = "tempest-info";
 
