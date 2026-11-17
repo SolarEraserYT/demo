@@ -1,7 +1,7 @@
 {
   "bundle": "scripts/settings-panel.js",
   "original_sha256": "20906ee45bc565d10ba3103d947320eb3660bd57326072ca7cabc055f7ec7e3b",
-  "last_built_sha256": "ae33c5b1fea72477403333a4fcf1078d87d89194e528395e0aafab2a701e4bf9",
+  "last_built_sha256": "7f1f4bc08e56e14ad9f85e0b6f98944cdd12f3bf8e76eaff5655ae3db1f11fa4",
   "parts": [
     {
       "name": "00-settings-panel.js",

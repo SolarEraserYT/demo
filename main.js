@@ -930,6 +930,9 @@ const sorted = [...people.values()].sort((a, b) => {
       // Find this user's equipped calling card.
       
 const cardId = cardState.equipped.get(accountId);
+// Aura Monster — activation uses Supabase verified equipped state.
+const auraMonsterEquipped = cardId === "aura_monster";
+row.classList.toggle("nameplate-aura-monster", auraMonsterEquipped);
 
 const redVoidEquipped = cardId === "red_void";
 row.classList.toggle("nameplate-red-void", redVoidEquipped);
@@ -970,6 +973,8 @@ const animatedUrl =
     ? "/blasted.webp"
     : cardId === "http_tactical"
       ? "/iridescent_damascus_calling_card.gif"
+    : cardId === "aura_monster"
+      ? "/styles/cosmetics/aura-monster.webp"
       : null;
 
 
@@ -985,7 +990,7 @@ const animatedUrl =
 
         row.style.setProperty(
           "min-height",
-          cardId === "http_tactical" ? "42px" : "40px",
+          (cardId === "http_tactical" || cardId === "aura_monster") ? "42px" : "40px",
           "important"
         );
       } else {
@@ -1077,7 +1082,8 @@ const animatedUrl =
                 "solar_tempest",
                 "blasted",
                 "http_tactical",
-                "red_void"
+                "red_void",
+                "aura_monster"
               ].includes(entry.card_id)
             )
 
