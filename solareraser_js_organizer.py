@@ -27,6 +27,7 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 
 BRANCH = "refactor/javascript-organization"
@@ -250,6 +251,47 @@ def verify(root: Path, section: str) -> None:
     print("All selected JavaScript bundles are byte-for-byte identical to their source fragments.")
 
 
+def matches_clean_committed_bundle(root: Path, key: str, manifest: dict,
+                                   current: bytes) -> bool:
+    """Allow a Windows checkout's line-ending conversion, not independent edits.
+
+    Both the checked-out bundle and HEAD's source fragments must agree with
+    the tracked, committed bundle once CRLF is normalized to LF. This verifies
+    the *previous* bundle, before new source edits are assembled.
+
+    The normal SHA check remains the primary path and works without Git (e.g.
+    deployment staging). This fallback only runs for a hash mismatch.
+    """
+    def from_head(path: str) -> bytes | None:
+        try:
+            found = subprocess.run(
+                ["git", "-C", str(root), "show", "HEAD:" + path],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                check=False,
+            )
+        except (OSError, ValueError):
+            return None
+        return found.stdout if found.returncode == 0 else None
+
+    def normalize(data: bytes) -> bytes:
+        return data.replace(b"\r\n", b"\n")
+
+    bundle = manifest["bundle"]
+    previous_bundle = from_head(bundle)
+    if previous_bundle is None or normalize(current) != normalize(previous_bundle):
+        return False
+
+    # Prevent stale/broken committed manifests from hiding independent changes.
+    committed_parts = []
+    for part in manifest["parts"]:
+        path = (SRC_BASE / key / part["name"]).as_posix()
+        raw = from_head(path)
+        if raw is None:
+            return False
+        committed_parts.append(raw)
+    return normalize(b"".join(committed_parts)) == normalize(previous_bundle)
+
+
 def build(root: Path, section: str) -> None:
     keys = [key for key in chosen(section) if manifest_path(root, key).exists()]
     if not keys:
@@ -267,9 +309,15 @@ def build(root: Path, section: str) -> None:
         # bundle and its source fragments are *exactly the same bytes*.
         # Only allow that harmless case; otherwise preserve the safety stop.
         if sha256(current) != last_hash and current != content:
-            die(f"{key}: {location} was edited separately from its source pieces. "
-                "Move the changes into the corresponding source part first; "
-                "refusing to overwrite the bundle.")
+            if matches_clean_committed_bundle(root, key, manifest, current):
+                print(f"[OK] {key}: matches committed JS and source fragments "
+                      "(safe checkout/hash mismatch); rebuilding")
+            else:
+                die(f"{key}: {location} was edited separately from its source pieces "
+                    "or the committed baseline could not be verified. "
+                    "Run 'git status --short' and 'git diff -- "
+                    f"{manifest['bundle']}' to inspect the changes. "
+                    "Refusing to overwrite the bundle.")
         changes.append((key, location, content, manifest))
 
     for key, location, content, manifest in changes:

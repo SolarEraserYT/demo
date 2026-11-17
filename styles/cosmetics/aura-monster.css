@@ -1,0 +1,65 @@
+/* SolarEraser — Aura Monster: exclusive animated calling card.
+   No alterations to Red Void, Solar Tempest or other cosmetics. */
+
+:is(.right, .solar-aura-monster-preview) .user_item.nameplate-aura-monster {
+  position: relative;
+  display: flex;
+  align-items: center;
+  isolation: isolate;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 10px;
+  min-height: 42px;
+  border: 1px solid rgba(118, 196, 128, .75);
+  background: #0b1013 url("/styles/cosmetics/aura-monster.webp") center / 100% 100% no-repeat !important;
+  box-shadow: inset 0 0 10px rgba(27, 66, 45, .25), 0 0 7px rgba(93, 173, 105, .30);
+}
+
+/* Preserve the background image on hover, including older hover overrides. */
+:is(.right, .solar-aura-monster-preview) .user_item.nameplate-aura-monster:hover {
+  background: #0b1013 url("/styles/cosmetics/aura-monster.webp") center / 100% 100% no-repeat !important;
+}
+
+/* Actual nickname shifts to the right, not text baked into the animation. */
+:is(.right, .solar-aura-monster-preview) .user_item.nameplate-aura-monster > .name {
+  position: absolute;
+  z-index: 3;
+  left: 61%;
+  top: 50%;
+  transform: translateY(-50%);
+  box-sizing: border-box;
+  display: block;
+  width: 37%;
+  min-width: 0;
+  padding: 0 2px;
+  margin: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: clamp(10px, 0.95vw, 13px);
+  font-weight: 800;
+  text-shadow: 0 0 4px rgba(4, 10, 7, .95), 0 0 9px rgba(152, 228, 148, .55);
+  pointer-events: auto;
+}
+
+.solar-aura-monster-preview .user_item.nameplate-aura-monster {
+  width: 100%;
+  height: auto;
+  min-height: 68px;
+  aspect-ratio: 500 / 112;
+  padding: 0 !important;
+  margin: 0;
+}
+
+.solar-aura-monster-preview .user_item.nameplate-aura-monster > .name {
+  font-size: clamp(12px, 2.9vw, 18px);
+}
+
+@media (max-width: 760px) {
+  .right .user_item.nameplate-aura-monster > .name {
+    left: 58%;
+    width: 40%;
+    font-size: 10px;
+  }
+}

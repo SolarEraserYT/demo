@@ -483,6 +483,77 @@ if (!isBlasted) {
           continue;
         }
 
+        // AFLAC — AURA MONSTER ANIMATED NAMECARD (exclusive inventory item)
+        if (cardId === "aura_monster") {
+          const equipped = data.equipped === cardId;
+          const item = document.createElement("div");
+          item.className = "tempest-inventory-item";
+
+          // Uses the same WebP + name placement as the real user list.
+          const previewHost = document.createElement("div");
+          previewHost.className = "solar-aura-monster-preview";
+          const preview = document.createElement("div");
+          preview.className = "user_item nameplate-aura-monster";
+          const sampleName = document.createElement("div");
+          sampleName.className = "name";
+          sampleName.textContent = String(profile?.nickname || "Aflac");
+          preview.appendChild(sampleName);
+          previewHost.appendChild(preview);
+
+          const info = document.createElement("div");
+          info.className = "tempest-info";
+          const title = document.createElement("strong");
+          title.textContent = "Aura Monster — Exclusive";
+          title.style.color = "#b6efb5";
+          const description = document.createElement("small");
+          description.textContent = "Subaru's ominous grin, original animated atmosphere, and a shifted nickname.";
+          info.append(title, description);
+
+          const actions = document.createElement("div");
+          actions.className = "tempest-actions";
+          const equip = document.createElement("button");
+          equip.className = "tempest-action";
+          equip.type = "button";
+          equip.textContent = equipped ? "Equipped ✓" : "Equip";
+          equip.disabled = equipped;
+          const unequip = document.createElement("button");
+          unequip.className = "tempest-action secondary";
+          unequip.type = "button";
+          unequip.textContent = "Unequip";
+          unequip.disabled = !equipped;
+          const message = document.createElement("div");
+          message.className = "tempest-status";
+          message.textContent = equipped ? "Currently equipped" : "Owned — not equipped";
+          actions.append(equip, unequip);
+          item.append(previewHost, info, actions, message);
+
+          async function saveAuraMonster(nextCard) {
+            equip.disabled = true;
+            unequip.disabled = true;
+            message.textContent = "Saving...";
+            try {
+              const { error } = await supabase.rpc("set_my_chat_namecard", {
+                p_card_id: nextCard
+              });
+              if (error) throw error;
+              await refreshInventory();
+              // Refresh local sidebar; remote viewers use existing 12s sync.
+              if (typeof renderUsers === "function") {
+                void renderUsers.solarCardState?.fetch?.();
+              }
+            } catch (error) {
+              console.warn("[Aura Monster inventory]", error);
+              message.textContent = "Could not save: " + error.message;
+              equip.disabled = equipped;
+              unequip.disabled = !equipped;
+            }
+          }
+          equip.addEventListener("click", () => saveAuraMonster("aura_monster"));
+          unequip.addEventListener("click", () => saveAuraMonster(null));
+          content.appendChild(item);
+          continue;
+        }
+
         if (cardId !== "solar_tempest") {
           const other = document.createElement("div");
           other.className = "solar-settings-coming";
