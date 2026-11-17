@@ -261,11 +261,15 @@ def build(root: Path, section: str) -> None:
         location = root / manifest["bundle"]
         current = location.read_bytes()
         last_hash = manifest.get("last_built_sha256")
-        if sha256(current) != last_hash:
+        content = assemble(root, key, manifest)
+        # Git can normalize Windows CRLF to LF on checkout. The stored
+        # last-built hash may therefore differ even when the checked-out
+        # bundle and its source fragments are *exactly the same bytes*.
+        # Only allow that harmless case; otherwise preserve the safety stop.
+        if sha256(current) != last_hash and current != content:
             die(f"{key}: {location} was edited separately from its source pieces. "
                 "Move the changes into the corresponding source part first; "
                 "refusing to overwrite the bundle.")
-        content = assemble(root, key, manifest)
         changes.append((key, location, content, manifest))
 
     for key, location, content, manifest in changes:
