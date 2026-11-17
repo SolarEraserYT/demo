@@ -1,0 +1,75 @@
+{
+  "bundle": "main.js",
+  "original_sha256": "61699d0f867a42fcdb19f8562385e823602d6823497b27d1c866e12e6cad6723",
+  "last_built_sha256": "61699d0f867a42fcdb19f8562385e823602d6823497b27d1c866e12e6cad6723",
+  "parts": [
+    {
+      "name": "00-foundation.js",
+      "initial_sha256": "18f463d0111603e7e6b1f583cb3aa3594e0c81f651ea07310d220104fcf64a50"
+    },
+    {
+      "name": "10-glow-and-profiles.js",
+      "initial_sha256": "d25ccc064a8a25b0f9dc7a15316aeaabe061ac839fe6f351ea2807636bc5780a"
+    },
+    {
+      "name": "20-messages.js",
+      "initial_sha256": "35fe62b1c503d59e6764deab2a70cee2549e795983a72a4e4715d008afee7b41"
+    },
+    {
+      "name": "30-room-selector.js",
+      "initial_sha256": "de97ddb40714aa018d692ad2ef7f3087313f9f72f31fdb07d8eda2e49495c894"
+    },
+    {
+      "name": "40-online-users-and-namecards.js",
+      "initial_sha256": "a25ff7949964d20326619c1a52c8e2665dde2642c2ca681710b0e771c5bf9073"
+    },
+    {
+      "name": "50-supabase-connection.js",
+      "initial_sha256": "c737f0fb9a31378645a63d95034cec8b0187eaa3cd77892cae3edf7ea4ddc347"
+    },
+    {
+      "name": "60-room-lifecycle.js",
+      "initial_sha256": "c74903b4c9d3e59cab4d8562fe0a20efbad6a6f817cf9b519a5696d1480b1c85"
+    },
+    {
+      "name": "70-nick-and-commands.js",
+      "initial_sha256": "9bd330d6979909494cb8169444196576d16c3e71b6374bc724f02fddac98eb19"
+    },
+    {
+      "name": "80-message-sending.js",
+      "initial_sha256": "856e36b17170f645abc30bf9f73b271904ea36324d8e27d2b7a24826652725fb"
+    },
+    {
+      "name": "90-color-picker.js",
+      "initial_sha256": "67acc1493dadfb6953c83cc8e72f873bba1b30aa0f140cc54a30e0854a9e2403"
+    },
+    {
+      "name": "100-chat-startup.js",
+      "initial_sha256": "796ff93b391ee87fc14a16f82da5c44665ec422b272f57cab50d681aff94e5bd"
+    },
+    {
+      "name": "110-moderation.js",
+      "initial_sha256": "100de17ad45265ba7c15bc7c56da686545396b6041ccdddce08a6947efbeca49"
+    },
+    {
+      "name": "120-admin-and-utilities.js",
+      "initial_sha256": "0527065a880e8d2ce565abcece44171e87e88a54fd00ca4ccf82e1803cc13681"
+    },
+    {
+      "name": "130-topics-and-help.js",
+      "initial_sha256": "bffd851900adad9f03efbec80e38e2da32268a958a77aa60932667c8bd1041c7"
+    },
+    {
+      "name": "140-account-recovery.js",
+      "initial_sha256": "6d394c3b3c1651819f14648971b2ae0d4ff7198fdb2282c746a9059e5861772f"
+    },
+    {
+      "name": "150-prism-username.js",
+      "initial_sha256": "2a50de570aa65ca2be2da60c91c043ae9195fe39c483f4166afbf90367323b95"
+    },
+    {
+      "name": "160-glitch-messages.js",
+      "initial_sha256": "a54946f8346008508257e655d47ab6cc681376e5bac99c0392185577453d8ead"
+    }
+  ]
+}

@@ -44,6 +44,8 @@ jobs:
           cp icon-192.png icon-512.png _site/icons/
           cp -R styles _site/
           cp -R scripts _site/
+          # Regenerate the existing JS bundles from ordered source fragments.
+          python3 solareraser_js_organizer.py --build --root _site
 
 
           printf '{\n  "version": "%s"\n}\n' \
