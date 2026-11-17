@@ -47,14 +47,309 @@
   --accent: #d4d4da;
   --accent-hover: #67676f;
 }
+/* SOLARERASER THEME EXPANSION V1 — SIX FREE PALETTES */
+/* Browser-local interface palettes; no changes to special cosmetics. */
+
+/* Slate — Smoky blue-gray and soft steel */
+:root[data-solar-theme="slate"] {
+  --border-color: #90a0ac;
+  --active-color: #a9bfd0;
+  --button-background: #39546a;
+  --input-background: #18222b;
+  --bg-main: #141c23;
+  --bg-panel: #202a33;
+  --bg-hover: #2e3a45;
+  --bg-input: #18222b;
+  --border-subtle: #3b4b56;
+  --text-main: #e6edf3;
+  --text-muted: #a4b4c2;
+  --accent: #9ec1d8;
+  --accent-hover: #577993;
+}
+
+/* Espresso — Warm coffee brown and amber */
+:root[data-solar-theme="espresso"] {
+  --border-color: #b19b85;
+  --active-color: #efc6a1;
+  --button-background: #67462f;
+  --input-background: #211912;
+  --bg-main: #171310;
+  --bg-panel: #241d18;
+  --bg-hover: #33281f;
+  --bg-input: #211912;
+  --border-subtle: #4a3930;
+  --text-main: #f1e6dd;
+  --text-muted: #c0aa98;
+  --accent: #e1af84;
+  --accent-hover: #86593a;
+}
+
+/* Aubergine — Deep plum with soft lavender */
+:root[data-solar-theme="aubergine"] {
+  --border-color: #c1a4c1;
+  --active-color: #e0b8dc;
+  --button-background: #6f4676;
+  --input-background: #201724;
+  --bg-main: #19121d;
+  --bg-panel: #271b2b;
+  --bg-hover: #39293e;
+  --bg-input: #201724;
+  --border-subtle: #4c3a52;
+  --text-main: #eee6ef;
+  --text-muted: #bba9c0;
+  --accent: #d3a2cf;
+  --accent-hover: #825589;
+}
+
+/* Terracotta — Relaxed clay red and warm peach */
+:root[data-solar-theme="terracotta"] {
+  --border-color: #d6a48e;
+  --active-color: #f6b08c;
+  --button-background: #925944;
+  --input-background: #291d1b;
+  --bg-main: #211a19;
+  --bg-panel: #302321;
+  --bg-hover: #49312c;
+  --bg-input: #291d1b;
+  --border-subtle: #66453c;
+  --text-main: #f3e9e3;
+  --text-muted: #cdb0a3;
+  --accent: #eea37d;
+  --accent-hover: #b16d52;
+}
+
+/* Lagoon — Calm teal and ocean blue */
+:root[data-solar-theme="lagoon"] {
+  --border-color: #88b7bb;
+  --active-color: #9cdee0;
+  --button-background: #2d6d77;
+  --input-background: #10272e;
+  --bg-main: #0f2026;
+  --bg-panel: #183038;
+  --bg-hover: #23454d;
+  --bg-input: #10272e;
+  --border-subtle: #345860;
+  --text-main: #e4f4f3;
+  --text-muted: #9abfbf;
+  --accent: #75c8cb;
+  --accent-hover: #3d8e96;
+}
+
+/* Paper — Soft cream with warm ink and tan */
+:root[data-solar-theme="paper"] {
+  color-scheme: light;
+  --border-color: #816c56;
+  --active-color: #825735;
+  --button-background: #d7bb93;
+  --input-background: #fffdf8;
+  --bg-main: #f7f3ea;
+  --bg-panel: #ebe5da;
+  --bg-hover: #e2d7c8;
+  --bg-input: #fffdf8;
+  --border-subtle: #cbbba7;
+  --text-main: #292927;
+  --text-muted: #5f605c;
+  --accent: #815737;
+  --accent-hover: #c8a573;
+}
+
+/* Only normal roster rows follow the selected palette.
+   Existing collectible / equipped nameplates keep their own styling. */
+
 /* Some old user-card rules still contain fixed colors; theme only regular cards. */
 :root[data-solar-theme]:not([data-solar-theme="default"])
-.right .user_item:not(.nameplate-red-void):not(.nameplate-glitch-test) {
+.right .user_item:not([class*="nameplate-"]) {
   background: var(--bg-hover);
   border-color: var(--border-subtle);
 }
 :root[data-solar-theme]:not([data-solar-theme="default"])
-.right .user_item:not(.nameplate-red-void):not(.nameplate-glitch-test):hover {
+.right .user_item:not([class*="nameplate-"]):hover {
   background: var(--bg-hover) !important;
   border-color: var(--accent) !important;
 }
+
+/* SOLARERASER MENU THEMING V1 - BEGIN */
+/* Settings, Store and their controls share the active chat palette.
+   Cosmetic product art/animations deliberately keep their own colors.
+   Root variables come from the existing Chat Themes selector. */
+
+/* Settings shell, sections, and readable typography */
+:root[data-solar-theme] .solar-settings-panel {
+  background: var(--bg-main);
+  color: var(--text-main);
+  border-color: var(--border-subtle);
+  box-shadow: 0 18px 52px rgb(0 0 0 / 28%);
+  scrollbar-color: var(--border-subtle) var(--bg-main);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-settings-header,
+:root[data-solar-theme] .solar-settings-panel .solar-settings-section-content {
+  border-color: var(--border-subtle);
+}
+:root[data-solar-theme] .solar-settings-panel :is(
+  .solar-settings-title,
+  .solar-settings-label strong,
+  .solar-settings-theme-description strong
+) { color: var(--text-main); }
+:root[data-solar-theme] .solar-settings-panel :is(
+  .solar-settings-eyebrow,
+  .solar-settings-subtitle,
+  .solar-settings-label small,
+  .solar-settings-chevron,
+  .solar-settings-note,
+  .solar-settings-coming,
+  .solar-settings-footer,
+  .solar-settings-theme-description small
+) { color: var(--text-muted); }
+:root[data-solar-theme] .solar-settings-panel .solar-settings-section {
+  background: var(--bg-panel);
+  border-color: var(--border-subtle);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-settings-section[open] {
+  border-color: var(--accent);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-settings-section summary:hover {
+  background: var(--bg-hover);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-settings-icon {
+  background: var(--bg-hover);
+  border-color: var(--border-subtle);
+  color: var(--accent);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-settings-close {
+  background: var(--bg-hover);
+  border-color: var(--border-subtle);
+  color: var(--text-main);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-settings-close:hover {
+  background: var(--button-background);
+  color: var(--text-main);
+}
+
+/* Theme selection stays clearly visible, including for light themes. */
+:root[data-solar-theme] .solar-settings-panel .solar-settings-theme-choice {
+  background: var(--bg-panel);
+  border-color: var(--border-subtle);
+  color: var(--text-main);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-settings-theme-choice:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-settings-theme-choice[aria-pressed="true"] {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-settings-theme-selected {
+  color: var(--accent);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-settings-theme-swatch {
+  border-color: var(--border-subtle);
+}
+
+/* The nested username color editor previously forced gray everywhere. */
+:root[data-solar-theme] .solar-settings-panel .solar-color-menu,
+:root[data-solar-theme] .solar-settings-panel .solar-color-popup {
+  color: var(--text-main);
+  background: var(--bg-panel);
+  border-color: var(--border-subtle);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-color-select {
+  color: var(--text-main);
+  background: var(--bg-input);
+  border-color: var(--border-subtle);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-color-preview {
+  border-color: var(--border-subtle);
+}
+:root[data-solar-theme] .solar-settings-panel .solar-color-menu > button,
+:root[data-solar-theme] .solar-settings-panel .solar-color-actions button {
+  background: var(--bg-hover) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-subtle) !important;
+}
+:root[data-solar-theme] .solar-settings-panel .solar-color-menu > button:hover,
+:root[data-solar-theme] .solar-settings-panel .solar-color-actions button:hover {
+  background: var(--button-background) !important;
+}
+:root[data-solar-theme] .solar-settings-panel button:focus-visible,
+:root[data-solar-theme] .solar-settings-panel summary:focus-visible {
+  outline-color: var(--accent);
+}
+
+/* The Store already uses theme variables for most of its interface.
+   Explicitly theme the shell/controls/preview dialogs as one unit;
+   do NOT recolor product demonstration artwork or equipped cosmetics. */
+:root[data-solar-theme] .solar-store-screen {
+  color: var(--text-main);
+  background: var(--bg-main);
+}
+:root[data-solar-theme] .solar-store-screen :is(
+  .solar-store-topbar,
+  .solar-store-navbar
+) {
+  color: var(--text-main);
+  background: var(--bg-panel);
+  border-color: var(--border-subtle);
+}
+:root[data-solar-theme] .solar-store-screen :is(
+  .solar-store-home,
+  .solar-store-close,
+  .solar-store-navbar button,
+  .solar-store-preview-dismiss
+) {
+  color: var(--text-main);
+  background: var(--bg-hover);
+  border-color: var(--border-subtle);
+}
+:root[data-solar-theme] .solar-store-screen :is(
+  .solar-store-home,
+  .solar-store-close,
+  .solar-store-navbar button,
+  .solar-store-preview-dismiss
+):hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+:root[data-solar-theme] .solar-store-screen :is(
+  .solar-store-demo,
+  .solar-store-feature,
+  .solar-store-item,
+  .solar-store-wallet > div,
+  .solar-store-preview-card
+) {
+  color: var(--text-main);
+  background-color: var(--bg-panel);
+  border-color: var(--border-subtle);
+}
+:root[data-solar-theme] .solar-store-screen .solar-store-preview-card {
+  background: var(--bg-panel);
+  border-color: var(--accent);
+}
+/* Preserve product-card hover feedback rather than overriding it. */
+:root[data-solar-theme] .solar-store-screen .solar-store-feature:hover {
+  border-color: var(--tone);
+}
+:root[data-solar-theme] .solar-store-screen .solar-store-item:hover {
+  border-color: var(--accent);
+  background-color: var(--bg-hover);
+}
+:root[data-solar-theme] .solar-store-screen :is(
+  .solar-store-heading small,
+  .solar-store-intro p,
+  .solar-store-heading-row span,
+  .solar-store-demo,
+  .solar-store-feature-foot small,
+  .solar-store-wallet p,
+  .solar-store-note,
+  .solar-store-preview-card p
+) { color: var(--text-muted); }
+:root[data-solar-theme] .solar-real-card-dialog {
+  color: var(--text-main);
+  background-color: var(--bg-panel);
+  border-color: var(--border-subtle);
+}
+:root[data-solar-theme] .solar-store-screen button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* SOLARERASER MENU THEMING V1 - END */

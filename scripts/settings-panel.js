@@ -11,13 +11,20 @@
   }
 
   const storageKey = "solareraser_chat_theme_v1";
-  const validThemes = new Set(["default", "midnight", "forest", "monochrome"]);
   const themes = [
     ["default", "Original", "Classic SolarEraser", "#11131b", "#171a24", "#9185ff"],
     ["midnight", "Midnight", "Navy and electric blue", "#07111f", "#101e30", "#69adff"],
     ["forest", "Forest", "Muted green and emerald", "#0a1712", "#13221a", "#7bd7a4"],
-    ["monochrome", "Monochrome", "Black, gray and silver", "#0b0b0c", "#19191b", "#d4d4da"]
+    ["monochrome", "Monochrome", "Black, gray and silver", "#0b0b0c", "#19191b", "#d4d4da"],
+    ["slate", "Slate", "Smoky blue-gray and soft steel", "#141c23", "#202a33", "#9ec1d8"],
+    ["espresso", "Espresso", "Warm coffee brown and amber", "#171310", "#241d18", "#e1af84"],
+    ["aubergine", "Aubergine", "Deep plum with soft lavender", "#19121d", "#271b2b", "#d3a2cf"],
+    ["terracotta", "Terracotta", "Relaxed clay red and warm peach", "#211a19", "#302321", "#eea37d"],
+    ["lagoon", "Lagoon", "Calm teal and ocean blue", "#0f2026", "#183038", "#75c8cb"],
+    ["paper", "Paper", "Soft cream with warm ink and tan", "#f7f3ea", "#ebe5da", "#815737"]
   ];
+  // Keep the allowlist in sync with the options, including future free themes.
+  const validThemes = new Set(themes.map(([id]) => id));
 
   const panel = document.createElement("aside");
   panel.className = "solar-settings-panel";
