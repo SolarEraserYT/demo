@@ -398,6 +398,91 @@ if (!isBlasted) {
 
         }
 
+        if (cardId === "red_void") {
+          const equipped = data.equipped === "red_void";
+          const item = document.createElement("div");
+          item.className = "tempest-inventory-item";
+
+          // Preview uses the SAME Red Void CSS as the live user list.
+          // The preview wrapper has its own CSS scope, without sidebar layout.
+          const previewHost = document.createElement("div");
+          previewHost.className = "solar-red-void-preview";
+          const preview = document.createElement("div");
+          preview.className = "user_item nameplate-red-void";
+          preview.style.cssText =
+            "min-height:68px;display:flex;align-items:center;padding:12px;";
+          const embers = document.createElement("div");
+          embers.className = "red-void-particles";
+          embers.setAttribute("aria-hidden", "true");
+          for (let i = 0; i < 18; i++) {
+            const ember = document.createElement("span");
+            ember.style.setProperty("--x", `${5 + (i * 29) % 91}%`);
+            ember.style.setProperty("--drift", `${(i % 2 ? 1 : -1) * (9 + (i % 5) * 5)}px`);
+            ember.style.setProperty("--duration", `${1.7 + (i % 5) * 0.24}s`);
+            ember.style.setProperty("--delay", `${-i * 0.29}s`);
+            ember.style.setProperty("--size", `${2 + (i % 3)}px`);
+            embers.appendChild(ember);
+          }
+          const sampleName = document.createElement("div");
+          sampleName.className = "name";
+          sampleName.textContent = String(profile?.nickname || "Red Void");
+          preview.append(embers, sampleName);
+          previewHost.appendChild(preview);
+
+          const info = document.createElement("div");
+          info.className = "tempest-info";
+          const title = document.createElement("strong");
+          title.textContent = "Red Void — Exclusive";
+          title.style.color = "#ff526b";
+          const description = document.createElement("small");
+          description.textContent = "Your original red-black smoke and ember namecard.";
+          info.append(title, description);
+
+          const actions = document.createElement("div");
+          actions.className = "tempest-actions";
+          const equip = document.createElement("button");
+          equip.className = "tempest-action";
+          equip.type = "button";
+          equip.textContent = equipped ? "Equipped ✓" : "Equip";
+          equip.disabled = equipped;
+          const unequip = document.createElement("button");
+          unequip.className = "tempest-action secondary";
+          unequip.type = "button";
+          unequip.textContent = "Unequip";
+          unequip.disabled = !equipped;
+          const message = document.createElement("div");
+          message.className = "tempest-status";
+          message.textContent = equipped ? "Currently equipped" : "Owned — not equipped";
+          actions.append(equip, unequip);
+          item.append(previewHost, info, actions, message);
+
+          async function saveRedVoid(nextCard) {
+            equip.disabled = true;
+            unequip.disabled = true;
+            message.textContent = "Saving...";
+            try {
+              const { error } = await supabase.rpc("set_my_chat_namecard", {
+                p_card_id: nextCard
+              });
+              if (error) throw error;
+              await refreshInventory();
+              // Other clients will see the change on the next namecard refresh.
+              if (typeof renderUsers === "function") {
+                void renderUsers.solarCardState?.fetch?.();
+              }
+            } catch (error) {
+              console.warn("[Red Void inventory]", error);
+              message.textContent = "Could not save: " + error.message;
+              equip.disabled = equipped;
+              unequip.disabled = !equipped;
+            }
+          }
+          equip.addEventListener("click", () => saveRedVoid("red_void"));
+          unequip.addEventListener("click", () => saveRedVoid(null));
+          content.appendChild(item);
+          continue;
+        }
+
         if (cardId !== "solar_tempest") {
           const other = document.createElement("div");
           other.className = "solar-settings-coming";

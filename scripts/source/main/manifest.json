@@ -1,7 +1,7 @@
 {
   "bundle": "main.js",
   "original_sha256": "61699d0f867a42fcdb19f8562385e823602d6823497b27d1c866e12e6cad6723",
-  "last_built_sha256": "61699d0f867a42fcdb19f8562385e823602d6823497b27d1c866e12e6cad6723",
+  "last_built_sha256": "13f850be9d62dd795887f653e75eb28c4909be633d7473d0f14335a05a61c076",
   "parts": [
     {
       "name": "00-foundation.js",
