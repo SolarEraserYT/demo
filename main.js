@@ -849,53 +849,7 @@ const sorted = [...people.values()].sort((a, b) => {
     const item = document.createElement("div");
     item.className = "user_item";
     item.style.padding = "5px 8px";
-/* AFLAC — Experimental Red Void Nameplate */
-
-const targetNameplateId =
-  "81e3b4ba-569b-4885-a71b-ae8230eb5423";
-
-// Local development uses a separate guest account.
-// Allow that account to preview the effect locally.
-const isLocalPreview =
-  ["localhost", "127.0.0.1"].includes(
-    window.location.hostname
-  ) &&
-  String(person.accountId) === String(profile?.id);
-
-if (
-  String(person.accountId) === targetNameplateId ||
-  isLocalPreview
-) {
-  item.classList.add("nameplate-red-void");
-
-  const particles = document.createElement("div");
-  particles.className = "red-void-particles";
-  particles.setAttribute("aria-hidden", "true");
-
-  for (let i = 0; i < 18; i++) {
-    const particle = document.createElement("span");
-
-    particle.style.setProperty(
-      "--x", `${5 + (i * 29) % 91}%`
-    );
-    particle.style.setProperty(
-      "--drift", `${(i % 2 ? 1 : -1) * (9 + (i % 5) * 5)}px`
-    );
-    particle.style.setProperty(
-      "--duration", `${1.7 + (i % 5) * 0.24}s`
-    );
-    particle.style.setProperty(
-      "--delay", `${-i * 0.29}s`
-    );
-    particle.style.setProperty(
-      "--size", `${2 + (i % 3)}px`
-    );
-
-    particles.appendChild(particle);
-  }
-
-  item.appendChild(particles);
-}
+    // Red Void activation now follows Supabase-equipped card state.
     const name = document.createElement("div");
     name.className = "name";
     name.textContent = person.nickname;
@@ -976,6 +930,29 @@ if (
       // Find this user's equipped calling card.
       
 const cardId = cardState.equipped.get(accountId);
+
+const redVoidEquipped = cardId === "red_void";
+row.classList.toggle("nameplate-red-void", redVoidEquipped);
+
+// Keep Red Void's original 18 ember particles, but only when equipped.
+let redVoidParticles = row.querySelector(":scope > .red-void-particles");
+if (redVoidEquipped && !redVoidParticles) {
+  redVoidParticles = document.createElement("div");
+  redVoidParticles.className = "red-void-particles";
+  redVoidParticles.setAttribute("aria-hidden", "true");
+  for (let i = 0; i < 18; i++) {
+    const particle = document.createElement("span");
+    particle.style.setProperty("--x", `${5 + (i * 29) % 91}%`);
+    particle.style.setProperty("--drift", `${(i % 2 ? 1 : -1) * (9 + (i % 5) * 5)}px`);
+    particle.style.setProperty("--duration", `${1.7 + (i % 5) * 0.24}s`);
+    particle.style.setProperty("--delay", `${-i * 0.29}s`);
+    particle.style.setProperty("--size", `${2 + (i % 3)}px`);
+    redVoidParticles.appendChild(particle);
+  }
+  row.insertBefore(redVoidParticles, row.firstChild);
+} else if (!redVoidEquipped && redVoidParticles) {
+  redVoidParticles.remove();
+}
 
 // Give HTTP Tactical the normal rounded
 // calling-card container, like Red Void.
@@ -1099,7 +1076,8 @@ const animatedUrl =
               [
                 "solar_tempest",
                 "blasted",
-                "http_tactical"
+                "http_tactical",
+                "red_void"
               ].includes(entry.card_id)
             )
 

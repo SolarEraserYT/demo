@@ -1,8 +1,9 @@
+/* SolarEraser — Red Void inventory preview: shares original effect styles. */
 /* ==========================================
    RED VOID — Experimental Nameplate
    ========================================== */
 
-.right .user_item.nameplate-red-void {
+:is(.right, .solar-red-void-preview) .user_item.nameplate-red-void {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -24,7 +25,7 @@
 
 /* Red-black atmospheric clouds */
 
-.right .nameplate-red-void::before {
+:is(.right, .solar-red-void-preview) .nameplate-red-void::before {
   content: "";
   position: absolute;
   inset: -35%;
@@ -51,7 +52,7 @@
 
 /* Moving red energy streak */
 
-.right .nameplate-red-void::after {
+:is(.right, .solar-red-void-preview) .nameplate-red-void::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -73,14 +74,14 @@
 
 /* Preserve the existing verified glow */
 
-.right .nameplate-red-void .name {
+:is(.right, .solar-red-void-preview) .nameplate-red-void .name {
   position: relative;
   z-index: 3;
   font-weight: 800;
   animation: void-tremor 0.19s steps(2) infinite;
 }
 
-.right .nameplate-red-void
+:is(.right, .solar-red-void-preview) .nameplate-red-void
 .name:not(.chat-glow) {
   text-shadow:
     1px 1px 0 #080307,
@@ -90,7 +91,7 @@
 
 /* Particle layer */
 
-.right .red-void-particles {
+:is(.right, .solar-red-void-preview) .red-void-particles {
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -98,7 +99,7 @@
   pointer-events: none;
 }
 
-.right .red-void-particles span {
+:is(.right, .solar-red-void-preview) .red-void-particles span {
   position: absolute;
   top: 75%;
   left: var(--x);
@@ -121,7 +122,7 @@
 
 /* Some embers are dark fragments */
 
-.right .red-void-particles
+:is(.right, .solar-red-void-preview) .red-void-particles
 span:nth-child(3n) {
   background: #080307;
   border: 1px solid #aa1430;
@@ -179,21 +180,21 @@ span:nth-child(3n) {
   66% { transform: translate(-0.5px, 0.5px); }
 }
 
-.right .user_item.nameplate-red-void:hover {
+:is(.right, .solar-red-void-preview) .user_item.nameplate-red-void:hover {
   background: #300810 !important;
   border-color: #ff4661 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .right .nameplate-red-void,
-  .right .nameplate-red-void::before,
-  .right .nameplate-red-void::after,
-  .right .nameplate-red-void .name,
-  .right .red-void-particles span {
+  :is(.right, .solar-red-void-preview) .nameplate-red-void,
+  :is(.right, .solar-red-void-preview) .nameplate-red-void::before,
+  :is(.right, .solar-red-void-preview) .nameplate-red-void::after,
+  :is(.right, .solar-red-void-preview) .nameplate-red-void .name,
+  :is(.right, .solar-red-void-preview) .red-void-particles span {
     animation: none !important;
   }
 
-  .right .red-void-particles {
+  :is(.right, .solar-red-void-preview) .red-void-particles {
     display: none;
   }
 }
