@@ -1,0 +1,23 @@
+{
+  "bundle": "scripts/settings-panel.js",
+  "original_sha256": "20906ee45bc565d10ba3103d947320eb3660bd57326072ca7cabc055f7ec7e3b",
+  "last_built_sha256": "20906ee45bc565d10ba3103d947320eb3660bd57326072ca7cabc055f7ec7e3b",
+  "parts": [
+    {
+      "name": "00-settings-panel.js",
+      "initial_sha256": "f3270aaeafc4db275c7a2100554948bc1b887e5861b84ede01a8274e9526f563"
+    },
+    {
+      "name": "10-namecard-inventory.js",
+      "initial_sha256": "4d883cc465095521015157e377a7e78a8d6b3d21a04fd961a9b6550afe63eace"
+    },
+    {
+      "name": "20-cosmetic-effect-inventory.js",
+      "initial_sha256": "fcf2929bdc6939fb13d9d6a6d684d603d14507e3de49f913dadd15a877fb5938"
+    },
+    {
+      "name": "30-advanced-settings.js",
+      "initial_sha256": "08a11b3775c506d4a87bb1d243589f0a736edd85003aba943e2d8855138db6f5"
+    }
+  ]
+}

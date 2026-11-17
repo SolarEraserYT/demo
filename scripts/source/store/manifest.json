@@ -1,0 +1,27 @@
+{
+  "bundle": "scripts/store-panel.js",
+  "original_sha256": "afeb6a4f4e15ad594b017075c50032372031f96cbd6404697fb95b46da29f146",
+  "last_built_sha256": "afeb6a4f4e15ad594b017075c50032372031f96cbd6404697fb95b46da29f146",
+  "parts": [
+    {
+      "name": "00-store-shell.js",
+      "initial_sha256": "e12062cf6dd00c5af8fd927968fabba4a2222a08f83b690a8307e9a700406500"
+    },
+    {
+      "name": "10-glitch-collection.js",
+      "initial_sha256": "9c44279c136c6663823b11fdfdcd7cd480f73e1df86fa667cb6f8a900c89e28b"
+    },
+    {
+      "name": "20-visual-showcase.js",
+      "initial_sha256": "598e18c675fd8965e027a19905a3da957a8784f89771ce7695bc72590496a2c6"
+    },
+    {
+      "name": "30-animated-previews.js",
+      "initial_sha256": "07e6abdce0e293848c3f961f74fadc56638b9c6b5f5a38eb71c6f1adff96049a"
+    },
+    {
+      "name": "40-animated-calling-cards.js",
+      "initial_sha256": "0634aa53ca6c7cca68a8fc86666e3d96c896c4841cc0235d3d9f6382848357b3"
+    }
+  ]
+}
